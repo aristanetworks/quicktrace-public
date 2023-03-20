@@ -1,0 +1,106 @@
+{
+  "version": 2,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 20,
+    "patch": 2
+  },
+  "configurePresets": [
+    {
+      "name": "c-cpp-std",
+      "description": "Default C/C++ standard and compiler used to build QuickTrace",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "gcc",
+        "CMAKE_CXX_EXTENSIONS": "OFF",
+        "CMAKE_CXX_STANDARD": "17",
+        "CMAKE_CXX_STANDARD_REQUIRED": "ON"
+      }
+    },
+    {
+      "name": "flags",
+      "description": "Default flags used to build QuickTrace",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_C_FLAGS": "-Wextra -Wall -Werror -Wno-unused-parameter -Wno-missing-field-initializers -Wno-unused-but-set-variable",
+        "CMAKE_CXX_FLAGS": "-Wextra -Wall -Werror -Wno-unused-parameter -Wno-missing-field-initializers -Wno-unused-but-set-variable",
+        "CMAKE_EXE_LINKER_FLAGS": "-Wl,--no-undefined"
+      }
+    },
+    {
+      "name": "base",
+      "description": "Base build config for QuickTrace",
+      "hidden": true,
+      "inherits": ["c-cpp-std", "flags"],
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/bld"
+    },
+    {
+      "name": "default",
+      "description": "Default build config",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_C_FLAGS_DEBUG": "-O0 -g",
+        "CMAKE_CXX_FLAGS_DEBUG": "-O0 -g",
+        "CMAKE_RUNTIME_OUTPUT_DIRECTORY": "${sourceDir}/bld/bin",
+        "CMAKE_LIBRARY_OUTPUT_DIRECTORY": "${sourceDir}/bld/lib"
+      }
+    },
+    {
+      "name": "test",
+      "description": "Test build config to run all unit tests in QuickTrace",
+      "inherits": "default",
+      "cacheVariables": {
+        "BUILD_TEST": true
+      },
+      "environment": {
+        "PATH": ".:${sourceDir}/bld/bin:${sourceDir}/test:$penv{PATH}",
+        "PYTHONPATH": ".:${sourceDir}/bld/lib:$penv{PYTHONPATH}",
+        "LD_LIBRARY_PATH": "${sourceDir}/bld/lib:$penv{LD_LIBRARY_PATH}"
+      }
+    },
+    {
+      "name": "release",
+      "description": "Release build config",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_C_FLAGS_RELEASE": "-O2",
+        "CMAKE_CXX_FLAGS_RELEASE": "-O2",
+        "CMAKE_RUNTIME_OUTPUT_DIRECTORY": "${sourceDir}/bld/bin",
+        "CMAKE_LIBRARY_OUTPUT_DIRECTORY": "${sourceDir}/bld/lib"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "default",
+      "configurePreset": "default",
+      "jobs": 5
+    },
+    {
+      "name": "test",
+      "configurePreset": "test",
+      "jobs": 5
+    },
+    {
+      "name": "release",
+      "configurePreset": "release",
+      "jobs": 5
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "test",
+      "configurePreset": "test",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error",
+        "jobs": 5
+      }
+    }
+  ]
+}
