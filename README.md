@@ -152,7 +152,7 @@ And then ensure that every class that invokes QTFMT0 also define a
 `currentClassName()` public method.
 
 #### QTRACE0( fixed, dynamic )
-(and QTRACE1 … QTRACE9.)
+*(and QTRACE1 … QTRACE9.)*
 This is the original QuickTrace API which predates the QTFMT API. The macros are
 defined in QuickTrace/QuickTrace.h, alongside the other macros that are presented in
 that document. The 'fixed' and 'dynamic' arguments are sequences of quicktraceable
@@ -188,11 +188,11 @@ QTRACE0( "Programming " << QVAR << " at offset 0x" << QHEX, value << offset );
 
 QTRACE can be extended to support new datatypes as well – see below.
 #### QPROF0( fixed, dynamic )
-(and QPROF1 … QPROF9.)
+*(and QPROF1 … QPROF9.)*
 
 This macro counts the amount of time that elapses between the QPROF statement and the exit from the enclosing basic block. The fixed and dynamic parameters are entered into the log when the trace is executed, exactly like the QTRACE macros.
 When the innermost enclosing basic block is exited, a per-message time counter is incremented in the QuickTrace file, recording the number of processor ticks that elapsed between the initial trace and the exit point. context switches are not specially handled, so if the process was context switched out during this interval, then that time is still accounted in the total and billed to the QPROF statement.
-Note: The macro uses a stack allocated object with a fixed name in an RAII pattern, and so QPROF can only be used once per basic block.
+Note: The macro uses a stack allocated object with a fixed name in a RAII pattern, and so QPROF can only be used once per basic block.
 Note: QPROF0 is not a single statement. You cannot do this:
 ```c++
 if( blah )
@@ -201,31 +201,36 @@ if( blah )
 
 – this will generate a compiler error with only a moderately helpful message.
 #### QPROF( fixed )
-QPROF( fixed ) is a lightweight version of QPROFN(…). It measures the time until the end of the basic block, just like QPROF0. It updates a per-message hit counts, last hit time, and total time like a QTRACE does
+QPROF( fixed ) is a lightweight version of QPROFN(…). It measures the time until the end of the basic block, just like QPROF0. It updates a per-message hit counts, last hit time, and total time like a QTRACE does.
+
 The differences are:
 - it does not insert anything into the circular buffer
 - it does less work, and so is a little bit faster
 - it does not support any dynamic arguments
+
 #### QPROF_S( fixed )
-(as well as QPROF_F_S, QPROFN_S, and so on)
+*(as well as QPROF_F_S, QPROFN_S, and so on)*
+
 All profiling macros have self-profiling versions, which have identical names but with _S appended to the end. They still measure the time until the end of the basic block, but also record self time. Self time is the total time until the end of the block, excluding time spent in nested functions.
-Important details: Only nested functions that contain their own self-profiling macros will be excluded from the caller's self time.
+
+**Important details:** Only nested functions that contain their own self-profiling macros will be excluded from the caller's self time.
 The self-profiling macros consume ~30 additional CPU cycles per statement. (QPROF consumes ~60 CPU cycles, while QPROF_S consumes ~90).
 Self-profiling macros maintain per-thread data structures, so they can be used in multithreaded environments as long as multiple threads are not writing to the same tracefile.
 
 When should QPROF_S be used instead of QPROF?
-More information is better than less information, so the only disadvantage to using QPROF_S is the additional overhead. If the performance overhead is not a concern, then QPROF_S should likley be used.
+More information is better than less information, so the only disadvantage to using QPROF_S is the additional overhead. If the performance overhead is not a concern, then QPROF_S should likely be used.
 The main advantages of QPROF_S are as follows:
 - Self-profiling records valid data for recursive function calls, while normal profiling will double-count the time and report messy results.
 - Self-profiling makes it much easier to determine which specific functions are causing bottlenecks.
 - Self-profiling makes it possible to see how a specific function is affected by a change.
-_ QPROF_S records a valid timestamp, while QPROF does not.
+- QPROF_S records a valid timestamp, while QPROF does not.
 
-### Which C++ types can be traced ?
+### Which C++ types can be traced?
 QuickTrace allows you to trace the following data types:
 - `int8_t`,`uint8_t` and their larger size counterpart up to `int64_t` and `uint64_t`
 - `char`, `bool`
 - `double`, `float`
+- `std::optional`
 - `char const *`, `std::string`, `std::string_view`: Only the first 24
 characters at most are traced. To override this 24 character limit, pass in an
 int for the new size to the maxStringLen argument of `Quicktrace::initialize`
@@ -240,7 +245,7 @@ QuickTrace is enabled from python by importing the QuickTrace module, which has 
 - `Var`: used to wrap a traced argument to indicate that it is dynamic
 
 Here's an example of how to use QuickTrace from python.
-```c++
+```py
 import QuickTrace
 QuickTrace.initialize("qt-out-%d.qt")
 qv = QuickTrace.Var
@@ -255,11 +260,14 @@ It is often convenient to alias Var and trace0 to local variables with short nam
 The use of qv ensures that those arguments are re-evaluated every time the trace statement is hit, rather than just the first time.
 
 ### Turning QuickTrace on
-The quicktrace macros all write to one file, and this file is used by all tracing in the process.
- QuickTrace is enabled by setting the filename is set with the QuickTrace::initialize function, like this: `QuickTrace::initialize( "MyProcess-%d.qt" );`
+The QuickTrace macros all write to one file, and this file is used by all tracing in the process.
+ QuickTrace is enabled by setting the filename with the `QuickTrace::initialize` function, like this:
+```c++
+QuickTrace::initialize( "MyProcess-%d.qt" );
+```
 
-The initialize() function takes two arguments:
--  The first argument is the name of a file to use as output. The first occurrence of the string "%d" (if it exists) in the filename is replaced by the pid of the process. If the filename argument is null, then quicktracing is not enabled, enabling this pattern: `QuickTrace::initialize( getenv( "QTFILE" ));`
+The `initialize()` function takes two arguments:
+-  The first argument is the name of a file to use as output. The first occurrence of the string `%d` (if it exists) in the filename is replaced by the pid of the process. If the filename argument is null, then quicktracing is not enabled, enabling this pattern: `QuickTrace::initialize( getenv( "QTFILE" ));`
 - The second, optional, argument is of the SizeSpec type which is a pointer to a ten-entry long array of ints, where the nth entry represents the size in kilobytes, of the trace-level N circular buffer. So the first entry specifies the size of the level 0 trace buffer, and the last specifies the size of the level 9 trace buffer. The size array argument can be omitted, in which case a default size (currently 10K per level) is used.
 
 There is a python API to do the same thing as well:
@@ -269,8 +277,8 @@ Quicktrace.initialize(...)
 ```
 
 #### Creating Multiple QuickTrace Files
-Multiple QuickTrace files can be created by the same process by using the initialize_handle API. It takes the same arguments as the initialize API above but returns a TraceHandle that can be used with the lower-level QTFMT_H, QPROF_H and QTRACE_H macros.
-The initialize_handle API can be used independently or in addition to the initialize API.
+Multiple QuickTrace files can be created by the same process by using the `initialize_handle` API. It takes the same arguments as the initialize API above but returns a TraceHandle that can be used with the lower-level `QTFMT_H`, `QPROF_H` and `QTRACE_H` macros.
+The `initialize_handle` API can be used independently or in addition to the initialize API.
 
 #### Multithreaded Processes
 Multithreaded processes that require tracing from more than one thread must initialize QuickTrace through its MT specific APIs.
@@ -280,22 +288,22 @@ QuickTrace::initializeHandleMt(...);
 ```
 
 The MT initialization calls must only be invoked a single time and not per-thread.
-Note that even if the application code only uses traces in a single thread, libraries used by the application that are invoked from other threads may still issue traces against the defaultQuickTraceHandle. If this is a possibility, the MT initialization calls must be used.
+Note that even if the application code only uses traces in a single thread, libraries used by the application that are invoked from other threads may still issue traces against the `defaultQuickTraceHandle`. If this is a possibility, the MT initialization calls must be used.
 
 QuickTrace can only support a single thread within a process writing to a TraceFile. When a multithreaded process needs the ability to trace from multiple threads, a separate TraceFile must be used by each of the threads. Thread specific TraceFile creation is automatically handled by the QuickTrace library. The TraceFile corresponding to a thread is created the first time that thread issues a trace message against a TraceHandle.
 
-The first argument of initializeMt() and initializeHandleMt() provides the suffix for the names of the created trace files. The name of a file is constructed by concatenating the thread name with the provided suffix. The thread name must have been previously set through a call to pthread_setname_np().
+The first argument of initializeMt() and initializeHandleMt() provides the suffix for the names of the created trace files. The name of a file is constructed by concatenating the thread name with the provided suffix. The thread name must have been previously set through a call to `pthread_setname_np()`.
 
 For example, a process could set its main thread name using: `pthread_setname_np( pthread_self(), "MyProcess-main" );`
 
 It then initializes QuickTrace using: `QuickTrace::initializeMt( "-%d.qt" )`
 
-When the first trace is issued by the main thread against the defaultQuickTraceHandle, the QuickTrace library will create a file named MyProcess-main-12345.qt.
+When the first trace is issued by the main thread against the `defaultQuickTraceHandle`, the QuickTrace library will create a file named `MyProcess-main-12345.qt`.
 
 
 
 ### Where do the QuickTrace files go?
-QuickTrace::initialize looks at the `QUICKTRACEDIR` environment variable and uses this as the directory to store the requested QuickTrace file. It is added as a path prefix to the filename specified by the user, unless the user-specified filename starts with a '/' or '.'. If the environment variable is set, but the directory does not exist, then QuickTrace is not initialized. If the environment variable is not set, then '.qt' under the current working directory is used.
+QuickTrace::initialize looks at the `QUICKTRACEDIR` environment variable and uses this as the directory to store the requested QuickTrace file. It is added as a path prefix to the filename specified by the user, unless the user-specified filename starts with a `/` or `.`. If the environment variable is set, but the directory does not exist, then QuickTrace is not initialized. If the environment variable is not set, then '.qt' under the current working directory is used.
 #### Up to 3 saved qt files
 When creating a QuickTrace file with filename x.qt, we do the following:
 if x.qt.1 exists, we will rename it (with link()) to x.qt.2, but not overwrite x.qt.2, if it already exists.
@@ -309,12 +317,15 @@ original reason why it crashed. The cost of this is 3 tracefiles per process.
 
 ## Tools for managing QuickTrace files
 
-### qttail: read quicktrace files
+### qttail: read QuickTrace files
 `qttail` is a tool that prints out the quicktrace message stored in quicktrace file.
-By default it operates it tail mode, meaning that it'll run forever and print out
-any new traces messages that appears:
+By default it operates in tail mode, meaning that it'll run forever and print out
+any new trace messages that appear:
 ```
-qttail MyFile.qt
+>qttail .qt/myQuicktraceFile.qt
+2023-04-07 10:15:20.314466 0 +147804167922769620 "Hello world: 42"
+2023-04-07 10:15:20.314469 0 +5550 "Urgent trace message"
+2023-04-07 10:15:20.314471 0 +3498 "Another event: "this is a test string""
 ^C to exit
 ```
 
@@ -324,11 +335,11 @@ of the file then exit:
 qttail -c MyFile.qt
 ```
 There are other several useful options that are covered in the `--help` output of
-qttail.
+`qttail`.
 
 
 ### qtclear: clears counters on a qt file
-To clear the profiling and hit counters on a QuickTrace file, you simply run qtclear, like this:
+To clear the profiling and hit counters on a QuickTrace file, you simply run `qtclear`, like this:
 ```
 qtclear MyFile.qt
 ```
@@ -339,12 +350,12 @@ And this will reset the counters and the last hit time back to zero.
 By default every QuickTrace message is enabled when the process starts. Sometimes there is too much noise from particular traces that you are not interested in and you can use qtctl to turn on or off individual traces.
 - `qtctl show foo.qt` will show you which trace messages are on and which are off.
 - `qtctl on foo.qt` turns everything on, and `qtctl off foo.qt` turns everything off.
-- `qtctl` accepts a regexp argument with -r like this: `qtctl on -r <regexp> foo.qt`, which turns on every trace that matches <regexp>, using PCRE (perl-compatible RE) format. The regexp is matched against the message template (the one with %s in it) and against the filename. If there is a regexp match in either case then the message matches. qtctl on prints out all messages that got enabled that were not already enabled, so you can see what you changed.
-- qtctl on also accepts a '-m' argument to turn on an individual message by its message id: `qtctl on -m 7 foo.qt` turns on message 7.
-- qtctl show can also be given a regexp and it will show only messages that match that regexp.
+- `qtctl` accepts a regexp argument with -r like this: `qtctl on -r <regexp> foo.qt`, which turns on every trace that matches `<regexp>`, using PCRE (perl-compatible RE) format. The regexp is matched against the message template (the one with %s in it) and against the filename. If there is a regexp match in either case then the message matches. `qtctl` on prints out all messages that got enabled that were not already enabled, so you can see what you changed.
+- `qtctl` on also accepts a '-m' argument to turn on an individual message by its message id: `qtctl on -m 7 foo.qt` turns on message 7.
+- `qtctl` show can also be given a regexp and it will show only messages that match that regexp.
 
 
-`qtctl on|off` also takes an optional regexp or msgid argument, like qtctl on. So a useful thing to do might be something like this:
+`qtctl on|off` also takes an optional regexp or msgid argument, like `qtctl` on. So a useful thing to do might be something like this:
 ```
 qtctl off MyProcess.qt
 qtctl on -r Pattern1 MyProcess.qt
