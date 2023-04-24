@@ -166,6 +166,7 @@ target_link_libraries(
    QuickTraceMultipleThreadsTest
    PRIVATE
       QuickTrace
+      pthread
 )
 set_target_properties(
    QuickTraceMultipleThreadsTest
@@ -225,6 +226,7 @@ add_executable(QtTailCorruptionTest QtTailCorruptionTest.cpp)
 target_link_libraries(
    QtTailCorruptionTest
    PRIVATE
+      QuickTrace
       QuickTraceFormatTest
 )
 set_target_properties(
@@ -242,7 +244,9 @@ target_link_libraries(
    QtTailNewLogMessageOrderTest
    PRIVATE
       QuickTraceFormatTest
+      QuickTrace
       gtest
+      pthread
 )
 set_target_properties(
    QtTailNewLogMessageOrderTest
@@ -258,6 +262,8 @@ target_link_libraries(
    QtTailOverrunTest
    PRIVATE
       QuickTraceFormatTest
+      QuickTrace
+      pthread
 )
 set_target_properties(
    QtTailOverrunTest
@@ -292,6 +298,7 @@ target_link_libraries(
    QtRotateLogTest
    PRIVATE
       QuickTrace
+      pthread
 )
 add_test(
    NAME QtRotateLogTest
@@ -530,3 +537,12 @@ add_test(
       ${CMAKE_CURRENT_SOURCE_DIR}/QtFmtTest.py
    WORKING_DIRECTORY ${TEST_DIR}
 )
+
+add_test(
+   NAME QtPythonApiTest
+   COMMAND
+      ${Python_EXECUTABLE}
+      ${CMAKE_CURRENT_SOURCE_DIR}/QtPythonApiTest.py
+   WORKING_DIRECTORY ${TEST_DIR}
+)
+

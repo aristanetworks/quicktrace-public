@@ -37,6 +37,7 @@
 #include <unistd.h>
 #include <string>
 #include <QuickTrace/QuickTrace.h>
+#include <filesystem>
 
 char const * outfile = getenv( "QTFILE" ) ?: "QtRotateTest.qt";
 char const * filedir = getenv( "QUICKTRACEDIR" ) ?: ".qt";
@@ -96,6 +97,14 @@ void testLogFileCreation( bool rotateLogFile, bool multithread,
 }
 
 void setup() {
+   // Clear out any leftover files from a previous run
+   for ( const auto & fname : { "QtRotateTest.qt", "MT-QtRotateTest.qt" } ) {
+      for ( const auto & suffix : { "", ".1", ".2" } ) {
+         std::string path = std::string(filedir) + "/" + fname + suffix;
+         std::filesystem::remove( path );
+      }
+   }
+
    // Multithreaded tracefiles use the thread name as part of the filename.
    int ret;
    ret = pthread_setname_np( pthread_self(), threadName.c_str() );
