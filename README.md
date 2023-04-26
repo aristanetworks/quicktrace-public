@@ -117,8 +117,8 @@ Programming route 1.2.3.4 at offset 0x99.
 ```
 
 
-Similarly to Arista’s internal tracing library, QTFMT macros try to include the class name and function name:
-- QTFMT0: includes the class name and the function name. 
+By default, QTFMT macros try to include the class name and function name:
+- QTFMT0: includes the class name and the function name.
 - QTFMT0_FUNC: includes only the function name
 - QTFMT0_RAW: doesn’t include anything
 
