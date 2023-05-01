@@ -140,8 +140,8 @@ def trace8( *args ): tracef( 8, 0, args )
 def trace9( *args ): tracef( 9, 0, args )
 
 def close():
-   _typeToFmt = None
-   _msgId = None
+   global _msgId
+   _msgId = {}
 
 qtrace_string_size = _QuickTrace.getMaxStringTraceLen()
 

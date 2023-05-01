@@ -489,6 +489,7 @@ traceHandle( const std::string & traceFilename ) noexcept {
    return iter->second;
 }
 
+#ifndef __i386__
 static size_t
 getPhysicalMemorySize() noexcept {
    FILE * fp = fopen( "/proc/meminfo", "r" );
@@ -509,6 +510,7 @@ getPhysicalMemorySize() noexcept {
 
    return memTotal;
 }
+#endif
 
 void
 TraceHandle::adjustSizeSpec( bool limit ) noexcept{

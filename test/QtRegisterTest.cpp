@@ -39,8 +39,8 @@ bool isDefaultHandle = false;
 
 int main( int argc, char const ** argv ) {
    // implementation of register handle method used as callback in QuickTrace
-   QuickTrace::registerHandle = []( const QuickTrace::TraceHandle & handle,
-                                    bool defaultHandle ) {
+   QuickTrace::registerHandle = [&]( const QuickTrace::TraceHandle & handle,
+                                     bool defaultHandle ) {
       std::cout<< "TraceHandle registered by test lambda method" << std::endl;
       registered = true;
       isDefaultHandle = defaultHandle;

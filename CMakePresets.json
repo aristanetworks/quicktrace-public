@@ -56,7 +56,7 @@
       },
       "environment": {
         "PATH": ".:${sourceDir}/bld/bin:${sourceDir}/test:$penv{PATH}",
-        "PYTHONPATH": ".:${sourceDir}/bld/lib:$penv{PYTHONPATH}",
+        "PYTHONPATH": ".:${sourceDir}:${sourceDir}/bld/lib:$penv{PYTHONPATH}",
         "LD_LIBRARY_PATH": "${sourceDir}/bld/lib:$penv{LD_LIBRARY_PATH}"
       }
     },
