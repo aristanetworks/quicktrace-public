@@ -38,24 +38,24 @@ struct CorruptU8 {
    int what;
 };
 
-const char *
-formatString( const CorruptU8 & ) {
-   return "u";
-}
-
-void
-put( QuickTrace::RingBuf * rb, const CorruptU8 & labelOp ) {
-   switch ( labelOp.what ) {
-    case 1: // wrong datatype
-      rb->push( 1.0 );
-      break;
-    case 2: // wrong datatype
-      rb->push( "world" );
-      break;
-   }
-}
-
 } // namespace
+
+template<>
+struct QuickTrace::QtFormatter< CorruptU8 > {
+   static inline void put( RingBuf * rb, CorruptU8 labelOp ) noexcept {
+      switch ( labelOp.what ) {
+       case 1: // wrong datatype
+         rb->push( 1.0 );
+         break;
+       case 2: // wrong datatype
+         rb->push( "world" );
+         break;
+      }
+   }
+   static inline char const * formatString() noexcept {
+      return "u";
+   }
+};
 
 int
 main( int argc, char ** argv ) {

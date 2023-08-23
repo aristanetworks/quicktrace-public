@@ -24,15 +24,11 @@
 // ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 // SUCH DAMAGE.
 
-#ifdef QUICKTRACE_HEADER_INCLUDED_MARKER
-#error Incorrect QuickTrace header ordering. \
-       Please refer to README, Section ##: QuickTrace Header Ordering
-#endif // QUICKTRACE_HEADER_INCLUDED_MARKER
-
 #ifndef QUICKTRACE_RINGBUF_H
 #define QUICKTRACE_RINGBUF_H
 
 #include <QuickTrace/QuickTraceCommon.h>
+#include <QuickTrace/QuickTraceFormatter.h>
 
 namespace QuickTrace {
 
@@ -62,7 +58,7 @@ class RingBuf {
    template < class T >
    RingBuf & operator<<( T t ) noexcept {
       if ( likely( enabled() ) ) {
-         put( this, t );        // 'put' is overloaded
+         QtFormatter< T >::put( this, t );
       }
       return *this;
    }
@@ -94,32 +90,195 @@ class RingBuf {
    TraceFile * qtFile_;
 };
 
-inline void put( RingBuf * log, char x ) noexcept { log->push( x ); }
-inline void put( RingBuf * log, int8_t x ) noexcept { log->push( x ); }
-inline void put( RingBuf * log, uint8_t x ) noexcept { log->push( x ); }
-inline void put( RingBuf * log, uint16_t x ) noexcept { log->push( x ); }
-inline void put( RingBuf * log, int16_t x ) noexcept { log->push( x ); }
-inline void put( RingBuf * log, uint32_t x ) noexcept { log->push( x ); }
-inline void put( RingBuf * log, int32_t x ) noexcept { log->push( x ); }
-inline void put( RingBuf * log, uint64_t x ) noexcept { log->push( x ); }
+template<>
+struct QtFormatter< char > {
+   static inline void put( RingBuf * log, char x ) noexcept {
+      log->push( x );
+   }
+   static inline char const * formatString() noexcept {
+      return "c";
+   }
+};
+
+template<>
+struct QtFormatter< uint8_t > {
+   static inline void put( RingBuf * log, uint8_t x ) noexcept {
+      log->push( x );
+   }
+   static inline char const * formatString() noexcept {
+      return "u";
+   }
+};
+
+template<>
+struct QtFormatter< int8_t > {
+   static inline void put( RingBuf * log, int8_t x ) noexcept {
+      log->push( x );
+   }
+   static inline char const * formatString() noexcept {
+      return "u";
+   }
+};
+
+template<>
+struct QtFormatter< uint16_t > {
+   static inline void put( RingBuf * log, uint16_t x ) noexcept {
+      log->push( x );
+   }
+   static inline char const * formatString() noexcept {
+      return "s";
+   }
+};
+
+template<>
+struct QtFormatter< int16_t > {
+   static inline void put( RingBuf * log, int16_t x ) noexcept {
+      log->push( x );
+   }
+   static inline char const * formatString() noexcept {
+      return "s";
+   }
+};
+
+template<>
+struct QtFormatter< uint32_t > {
+   static inline void put( RingBuf * log, uint32_t x ) noexcept {
+      log->push( x );
+   }
+   static inline char const * formatString() noexcept {
+      return "i";
+   }
+};
+
+template<>
+struct QtFormatter< int32_t > {
+   static inline void put( RingBuf * log, int32_t x ) noexcept {
+      log->push( x );
+   }
+   static inline char const * formatString() noexcept {
+      return "i";
+   }
+};
+
+template<>
+struct QtFormatter< uint64_t > {
+   static inline void put( RingBuf * log, uint64_t x ) noexcept {
+      log->push( x );
+   }
+   static inline char const * formatString() noexcept {
+      return "q";
+   }
+};
+
+template<>
+struct QtFormatter< int64_t > {
+   static inline void put( RingBuf * log, int64_t x ) noexcept {
+      log->push( x );
+   }
+   static inline char const * formatString() noexcept {
+      return "q";
+   }
+};
+
 #ifdef __LP64__
-inline void put( RingBuf * log, long long unsigned int x ) noexcept {
-   log->push( x );
-}
+template<>
+struct QtFormatter< long long unsigned int > {
+   static inline void put( RingBuf * log, long long unsigned int x ) noexcept {
+      log->push( x );
+   }
+   static inline char const * formatString() noexcept {
+      return "q";
+   }
+};
+
+template<>
+struct QtFormatter< long long int > {
+   static inline void put( RingBuf * log, long long int x ) noexcept {
+      log->push( x );
+   }
+   static inline char const * formatString() noexcept {
+      return "q";
+   }
+};
 #endif
-inline void put( RingBuf * log, long long int x ) noexcept { log->push( x ); }
-inline void put( RingBuf * log, long x ) noexcept { log->push( x ); }
+
 #ifndef __LP64__
-inline void put( RingBuf * log, unsigned long x ) noexcept {
-   log->push( ( uint32_t )x );
-}
+template<>
+struct QtFormatter< unsigned long > {
+   static inline void put( RingBuf * log, unsigned long x ) noexcept {
+      log->push( ( uint32_t )x );
+   }
+   static inline char const * formatString() noexcept {
+      return "i";
+   }
+};
+
+template<>
+struct QtFormatter< long > {
+   static inline void put( RingBuf * log, long x ) noexcept {
+      log->push( x );
+   }
+   static inline char const * formatString() noexcept {
+      return "i";
+   }
+};
 #endif
-inline void put( RingBuf * log, bool x ) noexcept { log->push( ( char )x ); }
-inline void put( RingBuf * log, float x ) noexcept { log->push( x ); }
-inline void put( RingBuf * log, double x ) noexcept { log->push( x ); }
-inline void put( RingBuf * log, QNull x ) noexcept {}
-void put( RingBuf * log, char const * x ) noexcept;
-inline void put( RingBuf * log, void * x ) noexcept { log->push( ( uintptr_t )x ); }
+
+template<>
+struct QtFormatter< bool > {
+   static inline void put( RingBuf * log, bool x ) noexcept {
+      log->push( ( char ) x );
+   }
+   static inline char const * formatString() noexcept {
+      return "b";
+   }
+};
+
+template<>
+struct QtFormatter< float > {
+   static inline void put( RingBuf * log, float x ) noexcept {
+      log->push( x );
+   }
+   static inline char const * formatString() noexcept {
+      return "f";
+   }
+};
+
+template<>
+struct QtFormatter< double > {
+   static inline void put( RingBuf * log, double x ) noexcept {
+      log->push( x );
+   }
+   static inline char const * formatString() noexcept {
+      return "d";
+   }
+};
+
+template<>
+struct QtFormatter< void * > {
+   static inline void put( RingBuf * log, void * x ) noexcept {
+      log->push( ( uintptr_t )x );
+   }
+   static inline char const * formatString() noexcept {
+      return sizeof( void * ) == sizeof( uint64_t ) ? "q" : "i";
+   }
+};
+
+template<>
+struct QtFormatter< QNull > {
+   static inline void put( RingBuf * log, QNull x ) noexcept {}
+   static inline char const * formatString() noexcept {
+      return nullptr;
+   }
+};
+
+template<>
+struct QtFormatter< char const * > {
+   __attribute__( ( optimize( 3 ) ) ) static void put( RingBuf * log, char const * x ) noexcept;
+   static inline char const * formatString() noexcept {
+      return "p";
+   }
+};
 
 } // namespace QuickTrace 
 

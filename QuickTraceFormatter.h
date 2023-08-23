@@ -1,4 +1,4 @@
-// Copyright (c) 2022, Arista Networks, Inc.
+// Copyright (c) 2023, Arista Networks, Inc.
 // All rights reserved.
 
 // Redistribution and use in source and binary forms, with or without modification,
@@ -24,39 +24,19 @@
 // ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 // SUCH DAMAGE.
 
-// Creates a new formatter type for qttail to dlopen and trace..
+#ifndef QUICKTRACE_FORMATTER_H
+#define QUICKTRACE_FORMATTER_H
 
-#include <iostream>
-#include <unistd.h>
-#include <QuickTrace/QuickTrace.h>
-namespace {
+namespace QuickTrace {
 
-struct Dimension {
-   Dimension( float len, float wid, float dep )
-         : length( len ), width( wid ), depth( dep ) {}
-   float length;
-   float width;
-   float depth;
+class RingBuf;
+
+template< typename T >
+struct QtFormatter {
+   static inline void put( RingBuf * log, T type ) noexcept = delete;
+   static inline char const * formatString() noexcept = delete;
 };
 
-} // namespace
+} // namespace QuickTrace 
 
-template<>
-struct QuickTrace::QtFormatter< Dimension > {
-   static inline void put( RingBuf * rb, Dimension dim ) noexcept {
-      rb->push( dim.length );
-      rb->push( dim.width );
-      rb->push( dim.depth );
-   }
-   static inline char const * formatString() noexcept {
-      return "DIM";
-   }
-};
-
-int
-main( int argc, char ** argv ) {
-   char const * outfile = getenv( "QTFILE" ) ?: "qttail_plugin_test.qt";
-   QuickTrace::initialize( outfile );
-   Dimension dim = Dimension( 50.00, 30.50, 10.50 );
-   QTRACE0( "New Dimension is " << QVAR, dim );
-}
+#endif // QUICKTRACE_FORMATTER_H

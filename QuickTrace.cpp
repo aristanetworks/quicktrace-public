@@ -861,11 +861,9 @@ BlockTimerSelfMsg::~BlockTimerSelfMsg() noexcept {
       threadSubFuncStack.back() += delta;
    }
 }
-void put( RingBuf * log,
-          char const * x ) noexcept __attribute__ ( ( optimize( 3 ) ) );
 
 void
-put( RingBuf * log, char const * x ) noexcept {
+QtFormatter< char const * >::put( RingBuf * log, char const * x ) noexcept {
    // pascal-style string: len byte followed by data
    char * ptr = ((char*) log->ptr());
    char * ptr1 = ptr + 1;
@@ -1299,50 +1297,50 @@ GoQuickTrace_fullMsg( void * hdl,
       switch ( mask ) {
        case U8_MASK: {
          auto * u8Arg = reinterpret_cast< const uint8_t * >( argStart );
-         put( &sl, *u8Arg );
+         QuickTrace::QtFormatter< uint8_t >::put( &sl, *u8Arg );
          offset += sizeof( uint8_t );
          break;
        }
        case U16_MASK: {
          auto * u16Arg = reinterpret_cast< const uint16_t * >( argStart );
-         put( &sl, *u16Arg );
+         QuickTrace::QtFormatter< uint16_t >::put( &sl, *u16Arg );
          offset += sizeof( uint16_t );
          break;
        }
        case U32_MASK: {
          auto * u32Arg = reinterpret_cast< const uint32_t * >( argStart );
-         put( &sl, *u32Arg );
+         QuickTrace::QtFormatter< uint32_t >::put( &sl, *u32Arg );
          offset += sizeof( uint32_t );
          break;
        }
        case U64_MASK: {
          auto * u64Arg = reinterpret_cast< const uint64_t * >( argStart );
-         put( &sl, *u64Arg );
+         QuickTrace::QtFormatter< uint64_t >::put( &sl, *u64Arg );
          offset += sizeof( uint64_t );
          break;
        }
        case FLOAT_MASK: {
          auto * floatArg = reinterpret_cast< const float * >( argStart );
-         put( &sl, *floatArg );
+         QuickTrace::QtFormatter< float >::put( &sl, *floatArg );
          offset += sizeof( float );
          break;
        }
        case DOUBLE_MASK: {
          auto * doubleArg = reinterpret_cast< const double * >( argStart );
-         put( &sl, *doubleArg );
+         QuickTrace::QtFormatter< double >::put( &sl, *doubleArg );
          offset += sizeof( double );
          break;
        }
        case BOOL_MASK: {
          auto * boolArg = reinterpret_cast< const bool * >( argStart );
-         put( &sl, *boolArg );
+         QuickTrace::QtFormatter< bool >::put( &sl, *boolArg );
          offset += sizeof( bool );
          break;
        }
        default: {
          // No mask, must be a string
          const auto * stringArg = reinterpret_cast< const char * >( argStart );
-         put( &sl, stringArg );
+         QuickTrace::QtFormatter< const char * >::put( &sl, stringArg );
 
          // Add our substring length + 1 to our offset to account for the null char
          offset += argLens[ i ];
