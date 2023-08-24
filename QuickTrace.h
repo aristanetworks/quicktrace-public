@@ -52,6 +52,7 @@
 #include <string>
 #include <QuickTrace/QuickTraceCommon.h>
 #include <QuickTrace/QuickTraceRingBuf.h> // provides the RingBuffer to put the messages
+#include <QuickTrace/QuickTraceFormatString.h>
 #include <QuickTrace/QuickTraceOptFormatter.h>
 
 /*
@@ -85,7 +86,8 @@ class MsgFormatString {
          : key_( keyBuf ), ptr_( keyBuf ) { key_[0] = 0; }
    template < class T >
    MsgFormatString & operator<<( T t ) noexcept {
-      put( QtFormatter< T >::formatString() );
+      put( formatString(t));
+      // put( QtFormatter< T >::formatString() );
       return *this;
    }
    MsgFormatString & operator<<( QNull t ) noexcept {

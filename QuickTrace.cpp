@@ -861,6 +861,22 @@ BlockTimerSelfMsg::~BlockTimerSelfMsg() noexcept {
       threadSubFuncStack.back() += delta;
    }
 }
+void put( RingBuf * log,
+          char const * x ) noexcept __attribute__ ( ( optimize( 3 ) ) );
+
+void
+put( RingBuf * log, char const * x ) noexcept {
+   // pascal-style string: len byte followed by data
+   char * ptr = ((char*) log->ptr());
+   char * ptr1 = ptr + 1;
+   int i;
+   for( i = 0 ; i < qtMaxStringLen ; ++i ) {
+      if( !x[i] ) { break; }
+      ptr1[i] = x[i];
+   }
+   *ptr = i;
+   log->ptrIs( ptr1 + i );
+}
 
 void
 QtFormatter< char const * >::put( RingBuf * log, char const * x ) noexcept {

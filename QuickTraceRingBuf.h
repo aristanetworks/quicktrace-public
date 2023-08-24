@@ -58,7 +58,8 @@ class RingBuf {
    template < class T >
    RingBuf & operator<<( T t ) noexcept {
       if ( likely( enabled() ) ) {
-         QtFormatter< T >::put( this, t );
+         put( this, t );
+         // QtFormatter< T >::put( this, t );
       }
       return *this;
    }
@@ -279,6 +280,33 @@ struct QtFormatter< char const * > {
       return "p";
    }
 };
+
+inline void put( RingBuf * log, char x ) noexcept { log->push( x ); }
+inline void put( RingBuf * log, int8_t x ) noexcept { log->push( x ); }
+inline void put( RingBuf * log, uint8_t x ) noexcept { log->push( x ); }
+inline void put( RingBuf * log, uint16_t x ) noexcept { log->push( x ); }
+inline void put( RingBuf * log, int16_t x ) noexcept { log->push( x ); }
+inline void put( RingBuf * log, uint32_t x ) noexcept { log->push( x ); }
+inline void put( RingBuf * log, int32_t x ) noexcept { log->push( x ); }
+inline void put( RingBuf * log, uint64_t x ) noexcept { log->push( x ); }
+#ifdef __LP64__
+inline void put( RingBuf * log, long long unsigned int x ) noexcept {
+   log->push( x );
+}
+#endif
+inline void put( RingBuf * log, long long int x ) noexcept { log->push( x ); }
+inline void put( RingBuf * log, long x ) noexcept { log->push( x ); }
+#ifndef __LP64__
+inline void put( RingBuf * log, unsigned long x ) noexcept {
+   log->push( ( uint32_t )x );
+}
+#endif
+inline void put( RingBuf * log, bool x ) noexcept { log->push( ( char )x ); }
+inline void put( RingBuf * log, float x ) noexcept { log->push( x ); }
+inline void put( RingBuf * log, double x ) noexcept { log->push( x ); }
+inline void put( RingBuf * log, QNull x ) noexcept {}
+void put( RingBuf * log, char const * x ) noexcept;
+inline void put( RingBuf * log, void * x ) noexcept { log->push( ( uintptr_t )x ); }
 
 } // namespace QuickTrace 
 

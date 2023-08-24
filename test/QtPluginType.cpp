@@ -39,6 +39,18 @@ struct Dimension {
    float depth;
 };
 
+const char *
+formatString( const Dimension & ) {
+   return "DIM";
+}
+
+void
+put( QuickTrace::RingBuf * rb, const Dimension & dim ) {
+   rb->push( dim.length );
+   rb->push( dim.width );
+   rb->push( dim.depth );
+}
+
 } // namespace
 
 template<>

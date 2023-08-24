@@ -62,6 +62,7 @@ set(
       ${CMAKE_SOURCE_DIR}/QtcDecl.h
       ${CMAKE_SOURCE_DIR}/QuickTrace.h
       ${CMAKE_SOURCE_DIR}/QuickTraceCommon.h
+      ${CMAKE_SOURCE_DIR}/QuickTraceFormatString.h
       ${CMAKE_SOURCE_DIR}/QuickTraceFormatter.h
       ${CMAKE_SOURCE_DIR}/QuickTraceOptFormatter.h
       ${CMAKE_SOURCE_DIR}/Registration.h
