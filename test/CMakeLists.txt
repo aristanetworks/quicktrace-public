@@ -300,6 +300,11 @@ target_link_libraries(
       QuickTrace
       pthread
 )
+set_target_properties(
+   QtRotateLogTest
+   PROPERTIES
+      RUNTIME_OUTPUT_DIRECTORY ${TEST_DIR}
+)
 add_test(
    NAME QtRotateLogTest
    COMMAND QtRotateLogTest
@@ -314,6 +319,11 @@ target_link_libraries(
    PRIVATE
       QuickTrace
 )
+set_target_properties(
+   QtRegisterTest
+   PROPERTIES
+      RUNTIME_OUTPUT_DIRECTORY ${TEST_DIR}
+)
 add_test(NAME QtRegisterTest COMMAND QtRegisterTest)
 
 #------------------------------------------------------------------------------------
@@ -325,6 +335,11 @@ target_link_libraries(
    PRIVATE
       QuickTrace
 )
+set_target_properties(
+   QtcTest6
+   PROPERTIES
+      RUNTIME_OUTPUT_DIRECTORY ${TEST_DIR}
+)
 add_test(NAME QtcTest6 COMMAND QtcTest6)
 
 #------------------------------------------------------------------------------------
@@ -335,6 +350,11 @@ target_link_libraries(
    QtcUnitTest
    PRIVATE
       QuickTrace
+)
+set_target_properties(
+   QtcUnitTest
+   PROPERTIES
+      RUNTIME_OUTPUT_DIRECTORY ${TEST_DIR}
 )
 add_test(NAME QtcUnitTest COMMAND QtcUnitTest)
 
@@ -348,6 +368,11 @@ target_link_libraries(
       QuickTraceFormatTest
       QuickTraceFormatBasicTestFunctions
 )
+set_target_properties(
+   QuickTraceFormatBasicTest
+   PROPERTIES
+      RUNTIME_OUTPUT_DIRECTORY ${TEST_DIR}
+)
 add_test(NAME QuickTraceFormatBasicTest COMMAND QuickTraceFormatBasicTest)
 
 #------------------------------------------------------------------------------------
@@ -360,6 +385,11 @@ target_link_libraries(
       QuickTrace
       gtest
 )
+set_target_properties(
+   QuickTraceFilePathTest
+   PROPERTIES
+      RUNTIME_OUTPUT_DIRECTORY ${TEST_DIR}
+)
 add_test(NAME QuickTraceFilePathTest COMMAND QuickTraceFilePathTest)
 
 #------------------------------------------------------------------------------------
@@ -370,6 +400,11 @@ target_link_libraries(
    QuickTraceTest7
    PRIVATE
       QuickTrace
+)
+set_target_properties(
+   QuickTraceTest7
+   PROPERTIES
+      RUNTIME_OUTPUT_DIRECTORY ${TEST_DIR}
 )
 add_test(NAME QuickTraceTest7 COMMAND QuickTraceTest7)
 
@@ -382,6 +417,11 @@ target_link_libraries(
    PRIVATE
       QuickTrace
       gtest
+)
+set_target_properties(
+   TestFmtMsgDesc
+   PROPERTIES
+      RUNTIME_OUTPUT_DIRECTORY ${TEST_DIR}
 )
 add_test(NAME TestFmtMsgDesc COMMAND TestFmtMsgDesc)
 
@@ -545,4 +585,3 @@ add_test(
       ${CMAKE_CURRENT_SOURCE_DIR}/QtPythonApiTest.py
    WORKING_DIRECTORY ${TEST_DIR}
 )
-

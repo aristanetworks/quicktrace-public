@@ -37,6 +37,12 @@ struct QtFormatter {
    static inline char const * formatString() noexcept = delete;
 };
 
+template< typename T >
+concept has_qtformatter = requires( RingBuf * log ) {
+   QtFormatter< T >::put( log, std::declval< T >() ) &&
+   QtFormatter< T >::formatString();
+};
+
 } // namespace QuickTrace 
 
 #endif // QUICKTRACE_FORMATTER_H

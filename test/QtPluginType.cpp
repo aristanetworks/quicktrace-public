@@ -39,11 +39,13 @@ struct Dimension {
    float depth;
 };
 
+[[ maybe_unused ]]
 const char *
 formatString( const Dimension & ) {
    return "DIM";
 }
 
+[[ maybe_unused ]]
 void
 put( QuickTrace::RingBuf * rb, const Dimension & dim ) {
    rb->push( dim.length );

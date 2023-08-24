@@ -1313,50 +1313,82 @@ GoQuickTrace_fullMsg( void * hdl,
       switch ( mask ) {
        case U8_MASK: {
          auto * u8Arg = reinterpret_cast< const uint8_t * >( argStart );
-         QuickTrace::QtFormatter< uint8_t >::put( &sl, *u8Arg );
+         if constexpr ( QuickTrace::has_qtformatter< uint8_t > ) {
+            QuickTrace::QtFormatter< uint8_t >::put( &sl, *u8Arg );
+         } else {
+            put( &sl, *u8Arg );
+         }
          offset += sizeof( uint8_t );
          break;
        }
        case U16_MASK: {
          auto * u16Arg = reinterpret_cast< const uint16_t * >( argStart );
-         QuickTrace::QtFormatter< uint16_t >::put( &sl, *u16Arg );
+         if constexpr ( QuickTrace::has_qtformatter< uint16_t > ) {
+            QuickTrace::QtFormatter< uint16_t >::put( &sl, *u16Arg );
+         } else {
+            put( &sl, *u16Arg );
+         }
          offset += sizeof( uint16_t );
          break;
        }
        case U32_MASK: {
          auto * u32Arg = reinterpret_cast< const uint32_t * >( argStart );
-         QuickTrace::QtFormatter< uint32_t >::put( &sl, *u32Arg );
+         if constexpr ( QuickTrace::has_qtformatter< uint32_t > ) {
+            QuickTrace::QtFormatter< uint32_t >::put( &sl, *u32Arg );
+         } else {
+            put( &sl, *u32Arg );
+         }
          offset += sizeof( uint32_t );
          break;
        }
        case U64_MASK: {
          auto * u64Arg = reinterpret_cast< const uint64_t * >( argStart );
-         QuickTrace::QtFormatter< uint64_t >::put( &sl, *u64Arg );
+         if constexpr ( QuickTrace::has_qtformatter< uint64_t > ) {
+            QuickTrace::QtFormatter< uint64_t >::put( &sl, *u64Arg );
+         } else {
+            put( &sl, *u64Arg );
+         }
          offset += sizeof( uint64_t );
          break;
        }
        case FLOAT_MASK: {
          auto * floatArg = reinterpret_cast< const float * >( argStart );
-         QuickTrace::QtFormatter< float >::put( &sl, *floatArg );
+         if constexpr ( QuickTrace::has_qtformatter< float > ) {
+            QuickTrace::QtFormatter< float >::put( &sl, *floatArg );
+         } else{
+            put( &sl, *floatArg );
+         }
          offset += sizeof( float );
          break;
        }
        case DOUBLE_MASK: {
          auto * doubleArg = reinterpret_cast< const double * >( argStart );
-         QuickTrace::QtFormatter< double >::put( &sl, *doubleArg );
+         if constexpr ( QuickTrace::has_qtformatter< double > ) {
+            QuickTrace::QtFormatter< double >::put( &sl, *doubleArg );
+         } else {
+            put( &sl, *doubleArg );
+         }
          offset += sizeof( double );
          break;
        }
        case BOOL_MASK: {
          auto * boolArg = reinterpret_cast< const bool * >( argStart );
-         QuickTrace::QtFormatter< bool >::put( &sl, *boolArg );
+         if constexpr ( QuickTrace::has_qtformatter< bool > ) {
+            QuickTrace::QtFormatter< bool >::put( &sl, *boolArg );
+         } else {
+            put( &sl, *boolArg );
+         }
          offset += sizeof( bool );
          break;
        }
        default: {
          // No mask, must be a string
          const auto * stringArg = reinterpret_cast< const char * >( argStart );
-         QuickTrace::QtFormatter< const char * >::put( &sl, stringArg );
+         if constexpr ( QuickTrace::has_qtformatter< const char * > ) {
+            QuickTrace::QtFormatter< const char * >::put( &sl, stringArg );
+         } else {
+            put( &sl, stringArg );
+         }
 
          // Add our substring length + 1 to our offset to account for the null char
          offset += argLens[ i ];

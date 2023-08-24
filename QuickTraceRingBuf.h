@@ -58,8 +58,11 @@ class RingBuf {
    template < class T >
    RingBuf & operator<<( T t ) noexcept {
       if ( likely( enabled() ) ) {
-         put( this, t );
-         // QtFormatter< T >::put( this, t );
+         if constexpr ( has_qtformatter< T > ) {
+            QtFormatter< T >::put( this, t );
+         } else {
+            put( this, t );        // 'put' is overloaded
+         }
       }
       return *this;
    }

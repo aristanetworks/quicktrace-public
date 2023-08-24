@@ -86,15 +86,18 @@ class MsgFormatString {
          : key_( keyBuf ), ptr_( keyBuf ) { key_[0] = 0; }
    template < class T >
    MsgFormatString & operator<<( T t ) noexcept {
-      put( formatString(t));
-      // put( QtFormatter< T >::formatString() );
+      if constexpr ( has_qtformatter< T > ) {
+         put( QtFormatter< T >::formatString() );
+      } else {
+         put( formatString( t ) );
+      }
       return *this;
    }
    MsgFormatString & operator<<( QNull t ) noexcept {
       return *this;
    }
    char const * key() noexcept { return key_; }
-   void put( const char * s ) noexcept ;
+   void put( const char * s ) noexcept;
    static int const keySize = 256;
  private:
    void put( QNull s ) noexcept {}

@@ -38,11 +38,13 @@ struct CorruptU8 {
    int what;
 };
 
+[[ maybe_unused ]]
 const char *
 formatString( const CorruptU8 & ) {
    return "u";
 }
 
+[[ maybe_unused ]]
 void
 put( QuickTrace::RingBuf * rb, const CorruptU8 & labelOp ) {
    switch ( labelOp.what ) {
