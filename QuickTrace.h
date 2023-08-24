@@ -55,20 +55,6 @@
 #include <QuickTrace/QuickTraceFormatString.h>
 #include <QuickTrace/QuickTraceOptFormatter.h>
 
-/*
- * This is a marker to indicate that <QuickTrace/QuickTrace.h> has been included.
- * This is done because we always want QuickTrace headers to be included
- * before QuickTrace.h . This will be used in QuickTraceRingBuf.h which
- * is present in each QuickTrace header file.
- *
- * In short, compiling QuickTrace with gcc-4.7+ means the compiler will not perform
- * any unqualified template function lookups. Any specific types of a template
- * function must be declared before the template function itself. Since
- * QuickTraceRingBuf.h includes a lot of these declarations, this marker allows us
- * to ascertain that <QuickTrace/QuickTrace.h> is indeed loaded last.
- */
-#define QUICKTRACE_HEADER_INCLUDED_MARKER
-
 #define DEFAULT_NUM_MSG_COUNTERS 512
 
 namespace QuickTrace {
