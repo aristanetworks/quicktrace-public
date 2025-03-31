@@ -34,6 +34,7 @@
 #include <pcrecpp.h>
 #include <getopt.h>
 #include <unistd.h>
+#include <memory>
 #include <QuickTrace/MessageParser.h>
 #include <QuickTrace/QuickTrace.h>
 
