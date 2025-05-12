@@ -47,6 +47,21 @@ class QuickTracePythonApiTest( unittest.TestCase ):
 
       QuickTrace.initialize( qtfile1 )
       self.writeTrace( "First file trace" )
+
+      # Include some binary content in the output to ensure we can at least
+      # theoretically deal with surrogates in encoded UTF-8 data. This can
+      # happen when converting incorrectly formatted C strings into unicode
+      # strings, then back again, via the "surrogateescape" error handling.
+      # "stringWithSorrogates" below will have "\xbdec" surrogate to encode
+      # the invalid \ea byte, for example.
+      binary = b"<\xea>"
+      stringWithSurrogates = binary.decode( "utf-8", "surrogateescape" )
+      stringWithoutSurrogates = "hello world"
+
+      QuickTrace.trace0("test UTF-8 errors:",
+            QuickTrace.Var( stringWithSurrogates ),
+            QuickTrace.Var( stringWithoutSurrogates ) )
+
       QuickTrace.finalize()
       QuickTrace.close()
 
@@ -57,13 +72,17 @@ class QuickTracePythonApiTest( unittest.TestCase ):
 
       # Check the contents of the first file
       output = subprocess.check_output( [ "/usr/bin/qttail", "-c", qtfile1 ],
-                                        universal_newlines=True )
+                                        universal_newlines=True,
+                                        errors="surrogateescape" )
       self.assertIn( "First file trace", output )
+      self.assertIn( f"test UTF-8 errors: {stringWithSurrogates} "
+                     f"{stringWithoutSurrogates}", output )
       self.assertNotIn( "Second file trace", output )
 
       # Check the contents of the second file
       output = subprocess.check_output( [ "/usr/bin/qttail", "-c", qtfile2 ],
-                                        universal_newlines=True )
+                                        universal_newlines=True,
+                                        errors="surrogateescape" )
       self.assertIn( "Second file trace", output )
       self.assertNotIn( "First file trace", output )
 

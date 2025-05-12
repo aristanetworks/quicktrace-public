@@ -401,6 +401,9 @@ unsigned
 MessageFormatter::applyCFormatSpec( const unsigned char * buf, std::ostream & os ) {
    CFormatSpec formatSpec;
    formatSpec.value = reinterpret_cast< intptr_t >( buf );
+   if ( formatSpec.alternate ) {
+      os << std::showbase;
+   }
    if ( formatSpec.showPos ) {
       os << std::showpos;
    }
@@ -548,6 +551,9 @@ MessageFormatter::init() {
             while ( strchr( "#0- +'I", param[ len ] ) != nullptr ) {
                // flags
                switch ( param[ len++ ] ) {
+                case '#':
+                  cFormatSpec.alternate = 1;
+                  break;
                 case '+':
                   cFormatSpec.showPos = 1;
                   break;
@@ -685,7 +691,8 @@ MessageFormatter::init() {
 
 unsigned
 MessageFormatter::resetCFormatSpec( const unsigned char *, std::ostream & os ) {
-   os << std::noshowpos << std::setfill( ' ' ) << std::defaultfloat;
+   os << std::noshowbase << std::noshowpos << std::setfill( ' ' )
+      << std::defaultfloat;
    return 0;
 }
 

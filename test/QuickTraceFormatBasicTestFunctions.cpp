@@ -145,10 +145,19 @@ traceU8() {
 TraceFuncReturn
 traceU8Hex() {
    uint8_t val = randomInt( 0, UINT8_MAX );
+   // case 1) default form
    TRACE_HEX( val );
    std::ostringstream oss;
    oss << std::hex << static_cast< uint16_t >( val );
-   return { oss.str() };
+   // case 2) alternate form
+   val |= 1; // eliminate zero
+   TRACE_HEXA( val );
+   std::ostringstream oss2;
+   oss2 << "0x" << std::hex << static_cast< uint16_t >( val );
+   // case 3) alternate form but zero value (no 0x prefix)
+   val = 0;
+   TRACE_HEXA( val );
+   return { oss.str(), oss2.str(), "0" };
 }
 
 TraceFuncReturn
@@ -161,10 +170,19 @@ traceU16() {
 TraceFuncReturn
 traceU16Hex() {
    uint16_t val = randomInt( 0, UINT16_MAX );
+   // case 1) default form
    TRACE_HEX( val );
    std::ostringstream oss;
    oss << std::hex << val;
-   return { oss.str() };
+   // case 2) alternate form
+   val |= 1; // eliminate zero
+   TRACE_HEXA( val );
+   std::ostringstream oss2;
+   oss2 << "0x" << std::hex << val;
+   // case 3) alternate form but zero value (no 0x prefix)
+   val = 0;
+   TRACE_HEXA( val );
+   return { oss.str(), oss2.str(), "0" };
 }
 
 TraceFuncReturn
@@ -177,10 +195,19 @@ traceU32() {
 TraceFuncReturn
 traceU32Hex() {
    uint32_t val = randomInt();
+   // case 1) default form
    TRACE_HEX( val );
    std::ostringstream oss;
    oss << std::hex << val;
-   return { oss.str() };
+   // case 2) alternate form
+   val |= 1; // eliminate zero
+   TRACE_HEXA( val );
+   std::ostringstream oss2;
+   oss2 << "0x" << std::hex << val;
+   // case 3) alternate form but zero value (no 0x prefix)
+   val = 0;
+   TRACE_HEXA( val );
+   return { oss.str(), oss2.str(), "0" };
 }
 
 TraceFuncReturn
@@ -195,10 +222,19 @@ TraceFuncReturn
 traceU64Hex() {
    uint64_t val = randomInt();
    val *= 4000000011; // generate a large number that uses the upper 32 bits
+   // case 1) default form
    TRACE_HEX( val );
    std::ostringstream oss;
    oss << std::hex << val;
-   return { oss.str() };
+   // case 2) alternate form
+   val |= 1; // eliminate zero
+   TRACE_HEXA( val );
+   std::ostringstream oss2;
+   oss2 << "0x" << std::hex << val;
+   // case 3) alternate form but zero value (no 0x prefix)
+   val = 0;
+   TRACE_HEXA( val );
+   return { oss.str(), oss2.str(), "0" };
 }
 
 TraceFuncReturn

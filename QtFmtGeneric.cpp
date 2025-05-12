@@ -79,6 +79,7 @@ msgDesc( QuickTrace::MsgDesc & qtmd,
 
       // Now find our closing '}'
       bool isHex = false;
+      bool isAlternate = false;
       size_t endPos = startPos + 1;
       for ( ; fmtString[ endPos ] != '\0'; endPos++ ) {
          if ( fmtString[ endPos ] == '{' ) {
@@ -89,10 +90,14 @@ msgDesc( QuickTrace::MsgDesc & qtmd,
          if ( fmtString[ endPos ] == '}' ) {
             break; // ok
          } else if ( fmtString[ endPos ] == ':' && !isHex ) {
-            // format specification, only allow for {:x} currently
+            // format specification, only allow for {:x} and {:#x} currently
+            if ( fmtString[ endPos + 1 ] == '#' ) {
+               isAlternate = true;
+               endPos++; // skip over the ':'
+            }
             if ( fmtString[ endPos + 1 ] == 'x' ) {
                isHex = true;
-               endPos++; // Skip over the ':x'
+               endPos++; // Skip over the ':x' or '#x'
             } else {
                // Unexpected character in format specification
                qtmd << std::string_view( fmtString + startPos );
@@ -112,7 +117,11 @@ msgDesc( QuickTrace::MsgDesc & qtmd,
       }
 
       if ( isHex ) {
-         qtmd << QHEX;
+         if ( isAlternate ) {
+            qtmd << QHEXA;
+         } else {
+            qtmd << QHEX;
+         }
       } else {
          qtmd << QVAR;
       }

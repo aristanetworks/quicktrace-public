@@ -52,7 +52,9 @@
 #include <string>
 #include <QuickTrace/QuickTraceCommon.h>
 #include <QuickTrace/QuickTraceRingBuf.h> // provides the RingBuffer to put the messages
+#include <QuickTrace/QuickTraceFileHeader.h>
 #include <QuickTrace/QuickTraceFormatString.h>
+#include <QuickTrace/QuickTraceFormatStringUtils.h>
 #include <QuickTrace/QuickTraceOptFormatter.h>
 
 /*
@@ -78,15 +80,23 @@ static constexpr pthread_key_t invalidPthreadKey = 0;
 // The following structs, with no members and a trivial constructor,
 // serve as place holders so you can shift them into a MsgDesc.
 struct Varg {};                 // %s-formatted argument
-struct HexVarg {};                  // hex-formatted argument
+struct HexVarg { bool alternate; }; // hex-formatted argument
+
+class MsgFormatString;
 
 class MsgFormatString {
  public:
    MsgFormatString( char * keyBuf ) noexcept
          : key_( keyBuf ), ptr_( keyBuf ) { key_[0] = 0; }
-   template < class T >
+
+   template < CanTakeRef T >
+   MsgFormatString & operator<<( T && t ) noexcept {
+      put( formatStringDispatch( std::forward< T >( t ) ) );
+      return *this;
+   }
+   template < CantTakeRef T >
    MsgFormatString & operator<<( T t ) noexcept {
-      put( formatString(t));
+      put( formatStringDispatch( t ) );
       return *this;
    }
    MsgFormatString & operator<<( QNull t ) noexcept {
@@ -153,40 +163,6 @@ class MsgDesc {
    MsgFormatString formatString_;
    PStringL * pstr_;
    MsgId id_;
-};
-
-struct SizeSpec {
-   // Sizes, in kilobytes of the individual trace buffers
-   // So for example, if you construct one  like this:
-   //   SizeSpec s = {1000,100,1, 1,1,1,1,1,1,1000};
-   // you'll allocate a megabyte for 0 and 9, 100K for 1, and 1K for
-   // everything else
-   static constexpr int SIZE = 10;
-   uint32_t sz[ SIZE ];
-
-   bool operator==( const SizeSpec &other ) const{
-      for ( int i = 0; i < SIZE; i++ ){
-         if( sz[i] != other.sz[i] ){
-            return false;
-         }
-      }
-      return true;
-   }
-};
-
-struct TraceFileHeader {
-   uint32_t version;
-   uint32_t fileSize;
-   uint32_t fileHeaderSize;
-   uint32_t fileTrailerSize;
-   uint32_t firstMsgOffset;
-   uint32_t logCount;
-   uint64_t tsc0;
-   double monotime0;
-   uint64_t tsc1;
-   double monotime1;
-   double utc1;
-   SizeSpec logSizes;
 };
 
 enum class MultiThreading {
@@ -362,7 +338,7 @@ class TraceHandle {
 extern TraceHandle * defaultQuickTraceHandle;
 // Get the thread-specific default TraceFile.
 static inline TraceFile * defaultQuickTraceFile() noexcept {
-   if( likely( NULL != ::QuickTrace::defaultQuickTraceHandle ) ) {
+   if( QUICKTRACE_LIKELY( NULL != ::QuickTrace::defaultQuickTraceHandle ) ) {
       return ::QuickTrace::defaultQuickTraceHandle->traceFile();
    }
    return NULL;
@@ -496,6 +472,19 @@ initializeHandleMt( char const * prefix, SizeSpec * ss=0,
                              MultiThreading::enabled );
 }
 
+static inline uint32_t updateLastTsc( uint32_t lastTscValue, uint64_t tsc) {
+   uint32_t off = lastTscValue & 0x80000000;
+   // Update the hit counters.  The high 4 bits of TSC take more
+   // than 8.5 years to become non-zero on a processor whose TSC
+   // advances at 2**32 ticks/second.  So we'll not worry about the
+   // case where the last-use timer is more than 8 years ago.
+   //
+   // We make sure the 32nd bit is never set by masking it unless we set it manually.
+   // With a high enough tsc value, the 32nd bit can end up being true,
+   // and we don't want to disable the qt message when that becomes true.
+   return ( uint32_t( tsc >> 28 ) & 0x7FFFFFFF ) | off;
+}
+
 } // namespace QuickTrace
 
 // qtvar is clever macro hackery to get a variable name that is unique
@@ -537,7 +526,7 @@ initializeHandleMt( char const * prefix, SizeSpec * ss=0,
 #define QTRACE_H( _qtf, _n, _x, _y )                                    \
    do {                                                                 \
       static QuickTrace::MsgId _msgId;                                  \
-      if( likely( !!(_qtf) ) ) {                                        \
+      if( QUICKTRACE_LIKELY( !!(_qtf) ) ) {                             \
          QTRACE_H_MSGID( _qtf, _msgId, _n, _x, _y );                    \
       }                                                                 \
    } while(0)
@@ -545,19 +534,19 @@ initializeHandleMt( char const * prefix, SizeSpec * ss=0,
 #define QTRACE_H_MSGID( _qtf, _msgId, _n, _x, _y )      \
    QTRACE_H_MSGID_VAR( _qtf, _msgId, qtvar(_rb), _n, _x, _y )
 
-#define QTRACE_H_MSGID_INIT_BASIC( _qtf, _msgId, _x )                      \
-   if( unlikely( !!( _qtf ) && !( _qtf )->msgIdInitialized( _msgId ) ) ) { \
-      QuickTrace::MsgDesc _qtmd( _qtf, &_msgId, __FILE__, __LINE__ );      \
-      _qtmd << _x;                                                         \
-      _qtmd.finish();                                                      \
+#define QTRACE_H_MSGID_INIT_BASIC( _qtf, _msgId, _x )                                 \
+   if( QUICKTRACE_UNLIKELY( !!( _qtf ) && !( _qtf )->msgIdInitialized( _msgId ) ) ) { \
+      QuickTrace::MsgDesc _qtmd( _qtf, &_msgId, __FILE__, __LINE__ );                 \
+      _qtmd << _x;                                                                    \
+      _qtmd.finish();                                                                 \
    }
 
-#define QTRACE_H_MSGID_INIT_FMT( _qtf, _msgId, _x, _y )                    \
-   if( unlikely( !!( _qtf ) && !( _qtf )->msgIdInitialized( _msgId ) ) ) { \
-      QuickTrace::MsgDesc _qtmd( _qtf, &_msgId, __FILE__, __LINE__ );      \
-      _qtmd.formatString() << _y;                                          \
-      _qtmd << _x;                                                         \
-      _qtmd.finish();                                                      \
+#define QTRACE_H_MSGID_INIT_FMT( _qtf, _msgId, _x, _y )                               \
+   if( QUICKTRACE_UNLIKELY( !!( _qtf ) && !( _qtf )->msgIdInitialized( _msgId ) ) ) { \
+      QuickTrace::MsgDesc _qtmd( _qtf, &_msgId, __FILE__, __LINE__ );                 \
+      _qtmd.formatString() << _y;                                                     \
+      _qtmd << _x;                                                                    \
+      _qtmd.finish();                                                                 \
    }
 
 #define QTRACE_H_MSGID_VAR( _qtf, _msgId, _rb, _n, _x, _y )             \
@@ -566,6 +555,21 @@ initializeHandleMt( char const * prefix, SizeSpec * ss=0,
    _rb.startMsg( _qtf, _msgId );                                        \
    _rb << _y;                                                           \
    _rb.endMsg()
+
+// specifically only a single long string - compared to above:
+// _x is the constant "%s"
+// _y is only a single string, no << usage
+#define QTRACE_H_LONGSTRING( _qtf, _n, _y ) \
+   do { \
+      static QuickTrace::MsgId _msgId;                                  \
+      if( QUICKTRACE_LIKELY( !!(_qtf) ) ) {                             \
+         QTRACE_H_MSGID_INIT_FMT( _qtf, _msgId, "%s", _y );             \
+         QuickTrace::RingBuf & _rb = ( _qtf )->log( _n );               \
+         _rb.startMsg( _qtf, _msgId );                                  \
+         _rb.putLongStr( _y );                                          \
+         _rb.endMsg();                                                  \
+      }                                                                 \
+   } while (0)
 
 // Base macro for tracing events and profiling
 #define QTPROF_H( _qtf, _n, _x, _y )                                    \
@@ -581,7 +585,7 @@ initializeHandleMt( char const * prefix, SizeSpec * ss=0,
 
 #define QTPROF_H_MSGID_VAR( _qtf, _msgId, _tsc, _n, _x, _y )                        \
    uint64_t _tsc;                                                                   \
-   if ( likely( !!( _qtf ) ) ) {                                                    \
+   if ( QUICKTRACE_LIKELY( !!( _qtf ) ) ) {                                         \
       QTRACE_H_MSGID_INIT_FMT( _qtf, _msgId, _x, _y );                              \
       QuickTrace::RingBuf & _rb = ( _qtf )->log( _n );                              \
       qtvar( tsc ) = _rb.startMsg( _qtf, _msgId );                                  \
@@ -597,7 +601,7 @@ initializeHandleMt( char const * prefix, SizeSpec * ss=0,
    QTPROF_H_S_VAR( _qtf, qtvar(msgid), _n, _x, _y )
 
 #define QTPROF_H_S_VAR( _qtf, _msgId, _n, _x, _y )                        \
-   static QuickTrace::MsgId _msgId;                                     \
+   static QuickTrace::MsgId _msgId;                                       \
    QTPROF_H_S_MSGID( _qtf, _msgId, _n, _x, _y )
 
 #define QTPROF_H_S_MSGID( _qtf, _msgId, _n, _x, _y )                      \
@@ -606,7 +610,7 @@ initializeHandleMt( char const * prefix, SizeSpec * ss=0,
 
 #define QTPROF_H_S_MSGID_VAR( _qtf, _msgId, _tsc, _n, _x, _y )                      \
    uint64_t _tsc;                                                                   \
-   if ( likely( !!( _qtf ) ) ) {                                                    \
+   if ( QUICKTRACE_LIKELY( !!( _qtf ) ) ) {                                         \
       QTRACE_H_MSGID_INIT_FMT( _qtf, _msgId, _x, _y );                              \
       QuickTrace::RingBuf & _rb = ( _qtf )->log( _n );                              \
       qtvar( tsc ) = _rb.startMsg( _qtf, _msgId );                                  \
@@ -639,7 +643,7 @@ initializeHandleMt( char const * prefix, SizeSpec * ss=0,
    QPROF_H_S_VAR( _qtf, qtvar(msgid), _x )
 
 #define QPROF_H_S_VAR( _qtf, _msgId, _x )                                 \
-   static QuickTrace::MsgId _msgId;                                     \
+   static QuickTrace::MsgId _msgId;                                       \
    QPROF_H_S_MSGID( _qtf, _msgId, _x )
 
 #define QPROF_H_S_MSGID( _qtf, _msgId, _x )                               \
@@ -693,13 +697,14 @@ initializeHandleMt( char const * prefix, SizeSpec * ss=0,
         QTRACE_H( (hdl)->getFile(), 9, _fixed, _dynamic )
 
 #define QASSERT( _cond, _fixed, _dynamic ) \
-   if( unlikely( !( _cond ) ) ) {          \
+   if( QUICKTRACE_UNLIKELY( !( _cond ) ) ) {          \
       QTRACE0( _fixed, _dynamic );         \
       assert( _cond );                     \
    }
 
 #define QVAR QuickTrace::Varg()
-#define QHEX QuickTrace::HexVarg()
+#define QHEX QuickTrace::HexVarg{ false }
+#define QHEXA QuickTrace::HexVarg{ true }
 #define QNULL QuickTrace::QNull()
 
 // 10 QPROF statements in a tight loop take about 120 cycles each, or
@@ -921,15 +926,15 @@ initializeHandleMt( char const * prefix, SizeSpec * ss=0,
 #define QPROF_EVT_STOP_VALUE( _idVar, _startVar, _restartVar, _sumVar, _textVar ) \
    QPROF_EVT_PAUSE_VALUE( _restartVar, _sumVar );                                 \
    uint64_t qtvar( diff ) = ( _sumVar != 0 ? _sumVar : rdtsc() - _startVar );     \
-   QPROF_EVT_REPORT( QuickTrace::theTraceFile, _idVar, _textVar, _startVar, \
-                     qtvar( diff ) )                                         \
+   QPROF_EVT_REPORT( QuickTrace::theTraceFile, _idVar, _textVar, _startVar,       \
+                     qtvar( diff ) )                                              \
    QPROF_EVT_RESET_VALUE( _startVar, _restartVar, _sumVar )
 
 #define QPROF_EVT_REPORT( _qtf, _idVar, _text, _startTime, _diff ) \
-   if ( likely( !!_qtf ) ) {                                                    \
+   if ( QUICKTRACE_LIKELY( !!_qtf ) ) {                                         \
       QTRACE_H_MSGID_INIT_BASIC( _qtf, _idVar, _text );                         \
       QuickTrace::MsgCounter *qtmc = _qtf->msgCounter( _idVar );                \
-      qtmc->lastTsc = ( _startTime >> 28 ) | ( qtmc->lastTsc & 0x80000000 );    \
+      qtmc->lastTsc = QuickTrace::updateLastTsc( qtmc->lastTsc, _startTime );   \
       qtmc->tscCount += _diff;                                                  \
       qtmc->count++;                                                            \
    }

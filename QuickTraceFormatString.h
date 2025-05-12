@@ -52,7 +52,7 @@ inline char const * formatString( float ) noexcept { return "f"; }
 inline char const * formatString( double ) noexcept { return "d"; }
 inline char const * formatString( char const * ) noexcept { return "p"; }
 inline char const * formatString( bool ) noexcept { return "b"; }
-inline char const * formatString( void * ) noexcept {
+inline char const * formatString( void const * ) noexcept {
    return sizeof( void * ) == sizeof( uint64_t ) ? "q" : "i";
 }
 

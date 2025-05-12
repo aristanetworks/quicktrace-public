@@ -24,15 +24,16 @@
 // ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 // SUCH DAMAGE.
 
+#ifndef QUICKTRACE_RINGBUF_H
+#define QUICKTRACE_RINGBUF_H
+
 #ifdef QUICKTRACE_HEADER_INCLUDED_MARKER
 #error Incorrect QuickTrace header ordering. \
        Please refer to README, Section ##: QuickTrace Header Ordering
 #endif // QUICKTRACE_HEADER_INCLUDED_MARKER
 
-#ifndef QUICKTRACE_RINGBUF_H
-#define QUICKTRACE_RINGBUF_H
-
 #include <QuickTrace/QuickTraceCommon.h>
+#include <QuickTrace/QuickTraceFormatStringTraits.h>
 
 namespace QuickTrace {
 
@@ -59,12 +60,25 @@ class RingBuf {
    }
    inline void maybeWrap( TraceFile * ) noexcept;
    void doWrap() noexcept;
-   template < class T >
+   template < CanTakeRef T >
+   RingBuf & operator<<( T && t ) noexcept {
+      if ( QUICKTRACE_LIKELY( enabled() ) ) {
+         put( this, std::forward< T >( t ) );        // 'put' is overloaded
+      }
+      return *this;
+   }
+   template < CantTakeRef T >
    RingBuf & operator<<( T t ) noexcept {
-      if ( likely( enabled() ) ) {
+      if ( QUICKTRACE_LIKELY( enabled() ) ) {
          put( this, t );        // 'put' is overloaded
       }
       return *this;
+   }
+   template < class T >
+   void putLongStr( T t ) noexcept {
+      if ( QUICKTRACE_LIKELY( enabled() ) ) {
+         putLongString( this, t );
+      }
    }
    MsgCounter * msgCounter( MsgId id ) noexcept {
       return &(msgCounter_[ id % numMsgCounters_ ]);
@@ -119,8 +133,12 @@ inline void put( RingBuf * log, float x ) noexcept { log->push( x ); }
 inline void put( RingBuf * log, double x ) noexcept { log->push( x ); }
 inline void put( RingBuf * log, QNull x ) noexcept {}
 void put( RingBuf * log, char const * x ) noexcept;
-inline void put( RingBuf * log, void * x ) noexcept { log->push( ( uintptr_t )x ); }
+inline void put( RingBuf * log, void const * x ) noexcept {
+   log->push( ( uintptr_t )x );
+}
 
+// Special case for long strings only
+void putLongString( RingBuf * log, char const * x ) noexcept;
 } // namespace QuickTrace 
 
 #endif // QUICKTRACE_RINGBUF_H

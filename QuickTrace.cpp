@@ -238,9 +238,11 @@ MsgDesc::operator<<( Varg x ) noexcept {
 
 MsgDesc & 
 MsgDesc::operator<<( HexVarg x ) noexcept {
-   ptr_[0] = '%';
-   ptr_[1] = 'x';
-   ptr_+=2;
+   *ptr_++ = '%';
+   if ( x.alternate ) {
+      *ptr_++ = '#';
+   }
+   *ptr_++ = 'x';
    return *this;
 }
 
@@ -716,7 +718,7 @@ struct RingBufHeader {
 
 inline void
 RingBuf::maybeWrap( TraceFile *tf ) noexcept {
-   if( unlikely(ptr_ >= bufEnd_) ) {
+   if( QUICKTRACE_UNLIKELY(ptr_ >= bufEnd_) ) {
       doWrap();
       qtFile_->maybeBackupBuffer();
    }
@@ -776,15 +778,7 @@ RingBuf::startMsg( TraceFile *tf, MsgId id ) noexcept {
       ptr_ += sizeof( id );
    }
 
-   // Update the hit counters.  The high 4 bits of TSC take more
-   // than 8.5 years to become non-zero on a processor whose TSC
-   // advances at 2**32 ticks/second.  So we'll not worry about the
-   // case where the last-use timer is more than 8 years ago.
-
-   // We make sure the 32nd bit is never set by masking it unless we set it manually.
-   // With a high enough tsc value, the 32nd bit can end up being true,
-   // and we don't want to disable the qt message when that becomes true.
-   mc->lastTsc = ( ( tsc >> 28 ) & 0x7FFFFFFF ) | off;
+   mc->lastTsc = updateLastTsc( mc->lastTsc, tsc );
    mc->count++;
 
    return tsc;
@@ -801,7 +795,7 @@ RingBuf::endMsg() noexcept {
 #endif
 
 BlockTimer::~BlockTimer() noexcept {
-   if( likely( qtFile_ != 0 ) ) {
+   if( QUICKTRACE_LIKELY( qtFile_ != 0 ) ) {
       uint64_t now = rdtsc();
       uint64_t delta = now - tsc_;
       MsgCounter * mc = qtFile_->msgCounter( msgId_ );
@@ -811,7 +805,7 @@ BlockTimer::~BlockTimer() noexcept {
 }
 
 BlockTimerMsg::~BlockTimerMsg() noexcept {
-   if( likely( qtFile_ != 0 ) ) {
+   if( QUICKTRACE_LIKELY( qtFile_ != 0 ) ) {
       uint64_t now = rdtsc();
       uint64_t delta = now - tsc_;
       MsgCounter * mc = qtFile_->msgCounter( msgId_ );
@@ -827,11 +821,11 @@ BlockTimerSelf::BlockTimerSelf( TraceFile * sf, MsgId mid ) noexcept :
 }
 
 BlockTimerSelf::~BlockTimerSelf() noexcept {
-   if( likely( qtFile_ != 0 ) ) {
+   if( QUICKTRACE_LIKELY( qtFile_ != 0 ) ) {
       uint64_t now = rdtsc();
       uint64_t delta = now - tsc_;
       MsgCounter * mc = qtFile_->msgCounter( msgId_ );
-      mc->lastTsc = ( now >> 28 ) | ( mc->lastTsc & 0x80000000 );
+      mc->lastTsc = updateLastTsc( mc->lastTsc, now );
       mc->tscCount += delta;
       mc->count++;
       mc->tscSelfCount += delta;
@@ -850,7 +844,7 @@ BlockTimerSelfMsg::BlockTimerSelfMsg( TraceFile * sf, MsgId mid,
 }
 
 BlockTimerSelfMsg::~BlockTimerSelfMsg() noexcept {
-   if( likely( qtFile_ != 0 ) ) {
+   if( QUICKTRACE_LIKELY( qtFile_ != 0 ) ) {
       uint64_t now = rdtsc();
       uint64_t delta = now - tsc_;
       MsgCounter * mc = qtFile_->msgCounter( msgId_ );
@@ -864,18 +858,31 @@ BlockTimerSelfMsg::~BlockTimerSelfMsg() noexcept {
 void put( RingBuf * log,
           char const * x ) noexcept __attribute__ ( ( optimize( 3 ) ) );
 
-void
-put( RingBuf * log, char const * x ) noexcept {
+// Common code for put() and putLongString()
+static void
+putWithMaxLen( RingBuf * log, char const * x, unsigned int maxLen ) noexcept {
    // pascal-style string: len byte followed by data
    char * ptr = ((char*) log->ptr());
    char * ptr1 = ptr + 1;
-   int i;
-   for( i = 0 ; i < qtMaxStringLen ; ++i ) {
+   unsigned int i;
+   for( i = 0 ; i < maxLen ; ++i ) {
       if( !x[i] ) { break; }
       ptr1[i] = x[i];
    }
    *ptr = i;
    log->ptrIs( ptr1 + i );
+}
+
+void
+put( RingBuf * log, char const * x ) noexcept {
+   putWithMaxLen( log, x, qtMaxStringLen );
+}
+
+// Special handling for long strings.
+#define LONGSTRING_LIMIT 240
+void
+putLongString( RingBuf * log, char const * x ) noexcept {
+   putWithMaxLen( log, x, LONGSTRING_LIMIT );
 }
 
 // Invoked when a thread is destroyed and the pthread TLS is being
@@ -976,7 +983,7 @@ TraceHandle::TraceHandle( char const * fileNameFormat,
         initialized_( false ) {
    std::lock_guard< std::mutex > lock( traceHandleMutex );
    registerPostForkCleanup();
-   if( foreverLogPath ) {
+   if( foreverLogPath && strlen( foreverLogPath ) != 0 ) {
       // Support for backup of thread specific files and management of
       // the index has not been added.
       assert( multiThreading_ == MultiThreading::disabled );
@@ -1078,7 +1085,7 @@ TraceHandle::maybeCreateMtTraceFile( bool rotateLogFile ) noexcept {
       return nonMtTraceFile_;
    }
    TraceFile *tf = ( TraceFile * )pthread_getspecific( traceFileThreadLocalKey_ );
-   if ( likely( NULL != tf ) ) {
+   if ( QUICKTRACE_LIKELY( NULL != tf ) ) {
       return tf;
    }
    // TraceFile initialization modifies TraceHandle state and also calls
@@ -1106,7 +1113,7 @@ TraceHandle::newTraceFile( bool rotateLogFile, uint32_t numMsgCounters ) noexcep
 
 TraceFile *
 TraceHandle::mtTraceFile() noexcept {
-   if( unlikely( !initialized_ ) ) {
+   if( QUICKTRACE_UNLIKELY( !initialized_ ) ) {
       return NULL;
    }
    return ( TraceFile * )pthread_getspecific( traceFileThreadLocalKey_ );
@@ -1289,7 +1296,7 @@ GoQuickTrace_fullMsg( void * hdl,
 
    *tsc = sl.startMsg( th->getFile(), id );
 
-   if ( unlikely( !sl.enabled() ) ) {
+   if ( QUICKTRACE_UNLIKELY( !sl.enabled() ) ) {
       return;
    }
 

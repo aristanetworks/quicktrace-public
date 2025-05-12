@@ -48,6 +48,7 @@
 #define SEP2 "<|"
 #define TRACE( P ) QTRACE0( __FUNCTION__ << SEP1 << QVAR << SEP2, P )
 #define TRACE_HEX( P ) QTRACE0( __FUNCTION__ << SEP1 << QHEX << SEP2, P )
+#define TRACE_HEXA( P ) QTRACE0( __FUNCTION__ << SEP1 << QHEXA << SEP2, P )
 
 typedef std::list< std::string > TraceFuncReturn;
 typedef TraceFuncReturn ( *TraceFunc )();

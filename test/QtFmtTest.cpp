@@ -24,6 +24,7 @@
 // ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 // SUCH DAMAGE.
 
+#include <unistd.h>
 #include <iostream>
 #include <QuickTrace/QtFmtGeneric.h>
 
@@ -43,6 +44,7 @@ testQtFmtClass() {
    QTFMT7( "QtFmtTest lvl7 {} {:x}", 42, 0xcafe );
    QTFMT8( "QtFmtTest lvl8 {} {:x}", 42, 0xcafe );
    QTFMT9( "QtFmtTest lvl9 {} {:x}", 42, 0xcafe );
+   QTFMT9( "QtFmtTest lvl9 {} {:#x}", 42, 0xcafe );
 
    QTFMT_PROF0( "QtFmtTest noparamsprof extra" );
    QTFMT_PROF0( "QtFmtTest prof0 {} {:x}", 42, 0xcafe );
@@ -55,6 +57,9 @@ testQtFmtClass() {
    QTFMT_PROF7( "QtFmtTest prof7 {} {:x}", 42, 0xcafe );
    QTFMT_PROF8( "QtFmtTest prof8 {} {:x}", 42, 0xcafe );
    QTFMT_PROF9( "QtFmtTest prof9 {} {:x}", 42, 0xcafe );
+   QTFMT_PROF9( "QtFmtTest prof9 {} {:#x}", 42, 0xcafe );
+   // Ensure some time passes for the last prof call
+   usleep( 1 );
 }
 
 // Validate that the QTFMT and QTFMT_PROF macros behave as expected.
@@ -73,6 +78,7 @@ testQtFmtFunc() {
    QTFMT7_FUNC( "QtFmtTest lvl7 {} {:x}", 42, 0xcafe );
    QTFMT8_FUNC( "QtFmtTest lvl8 {} {:x}", 42, 0xcafe );
    QTFMT9_FUNC( "QtFmtTest lvl9 {} {:x}", 42, 0xcafe );
+   QTFMT9_FUNC( "QtFmtTest lvl9 {} {:#x}", 42, 0xcafe );
 
    QTFMT_PROF0_FUNC( "QtFmtTest noparamsprof extra" );
    QTFMT_PROF0_FUNC( "QtFmtTest prof0 {} {:x}", 42, 0xcafe );
@@ -85,6 +91,9 @@ testQtFmtFunc() {
    QTFMT_PROF7_FUNC( "QtFmtTest prof7 {} {:x}", 42, 0xcafe );
    QTFMT_PROF8_FUNC( "QtFmtTest prof8 {} {:x}", 42, 0xcafe );
    QTFMT_PROF9_FUNC( "QtFmtTest prof9 {} {:x}", 42, 0xcafe );
+   QTFMT_PROF9_FUNC( "QtFmtTest prof9 {} {:#x}", 42, 0xcafe );
+   // Ensure some time passes for the last prof call
+   usleep( 1 );
 }
 
 int
@@ -104,6 +113,7 @@ main() {
    QTFMT7_RAW( "QtFmtTest lvl7 {} {:x}", 42, 0xcafe );
    QTFMT8_RAW( "QtFmtTest lvl8 {} {:x}", 42, 0xcafe );
    QTFMT9_RAW( "QtFmtTest lvl9 {} {:x}", 42, 0xcafe );
+   QTFMT9_RAW( "QtFmtTest lvl9 {} {:#x}", 42, 0xcafe );
 
    QTFMT_PROF0_RAW( "QtFmtTest noparamsprof extra" );
    QTFMT_PROF0_RAW( "QtFmtTest prof0 {} {:x}", 42, 0xcafe );
@@ -116,6 +126,7 @@ main() {
    QTFMT_PROF7_RAW( "QtFmtTest prof7 {} {:x}", 42, 0xcafe );
    QTFMT_PROF8_RAW( "QtFmtTest prof8 {} {:x}", 42, 0xcafe );
    QTFMT_PROF9_RAW( "QtFmtTest prof9 {} {:x}", 42, 0xcafe );
+   QTFMT_PROF9_RAW( "QtFmtTest prof9 {} {:#x}", 42, 0xcafe );
 
    testQtFmtFunc();
    testQtFmtClass();

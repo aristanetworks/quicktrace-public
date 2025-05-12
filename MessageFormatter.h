@@ -71,6 +71,7 @@ public:
    union CFormatSpec {
       intptr_t value;
       struct {
+         int alternate:1;
          int showPos:1;
          int zeroPad:1;
          int hasWidth:1;

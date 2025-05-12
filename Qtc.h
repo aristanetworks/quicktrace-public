@@ -34,13 +34,6 @@ static struct ignoreme_ {} ignoreme;
 #define qt_put_fmt_ignoreme(hdl, dp, d)
 #define qt_put_type_ignoreme(hdl, level, d)
 
-#ifndef unlikely
-#define unlikely( cond ) __builtin_expect((cond),0)
-#endif
-#ifndef likely
-#define likely( cond ) __builtin_expect((cond),1)
-#endif
-
 #define qt_put_if_compat( hdl, _tp, _fn, _tpstr, _lvlorDesc )               \
    if (__builtin_types_compatible_p(typeof (_qt_tmp), _tp)) {               \
       qt_put_##_fn##_##_tpstr(hdl, _lvlorDesc, ((void *)&_qt_tmp));         \
@@ -60,7 +53,7 @@ static struct ignoreme_ {} ignoreme;
  */
 #define qt_put_( hdl, _lvl, _desc, x ) do {                             \
       __extension__ __auto_type _qt_tmp = ( x );                        \
-      if ( unlikely( _desc != NULL ) ) qt_put_dispatch_( hdl, _desc, fmt ); \
+      if ( QUICKTRACE_UNLIKELY( _desc != NULL ) ) qt_put_dispatch_( hdl, _desc, fmt ); \
       qt_put_dispatch_( hdl, _lvl, type );                              \
    } while ( 0 );
 
@@ -204,14 +197,14 @@ static struct ignoreme_ {} ignoreme;
 {                                                                           \
    static int _qt_msgid = 0;                                                \
    uint64_t _qt_tsc = 0;                                                    \
-   if ( likely( !!( qt_isInitialized(hdl) ) ) ) {                           \
-       void *_qt_desc = NULL;                                            \
-       if ( unlikely( !_qt_msgid ) ) {                                      \
+   if ( QUICKTRACE_LIKELY( !!( qt_isInitialized(hdl) ) ) ) {                \
+       void *_qt_desc = NULL;                                               \
+       if ( QUICKTRACE_UNLIKELY( !_qt_msgid ) ) {                           \
            _qt_desc = alloca( qt_msgDescSize() );                           \
            qt_msgDescInit( hdl, _qt_desc, &_qt_msgid, __FILE__, __LINE__ ); \
            if ( _qt_desc ) {                                                \
              qt_startMsg( hdl, &_qt_tsc, _qt_msgid, _level );               \
-             QT_FOREACH( hdl, qt_put_, _level, _qt_desc, __VA_ARGS__ ); \
+             QT_FOREACH( hdl, qt_put_, _level, _qt_desc, __VA_ARGS__ );     \
              qt_addMsg( _qt_desc, str );                                    \
              qt_finish( _qt_desc );                                         \
              qt_endMsg( hdl, _level );                                      \
@@ -234,9 +227,9 @@ static struct ignoreme_ {} ignoreme;
     static int qtvar(_qt_msgid) = 0;                                        \
     uint64_t qtvar(_qt_tsc) = 0;                                            \
     qtvar(_qprof_tmp_var).th = hdl;                                         \
-    if ( likely( !!( qt_isInitialized(hdl) ) ) ) {                          \
+    if ( QUICKTRACE_LIKELY( !!( qt_isInitialized(hdl) ) ) ) {               \
         void *_qt_desc = 0;                                                 \
-        if ( unlikely( !qtvar(_qt_msgid) ) ) {                              \
+        if ( QUICKTRACE_UNLIKELY( !qtvar(_qt_msgid) ) ) {                   \
             _qt_desc = alloca(qt_msgDescSize());                            \
             qt_msgDescInit( hdl, _qt_desc, &qtvar(_qt_msgid),               \
                             __FILE__, __LINE__ );                           \
@@ -260,8 +253,8 @@ static struct ignoreme_ {} ignoreme;
     qtprof_t qtvar(_qprof_tmp_var) __attribute__((cleanup(qtprof_eob)));    \
     static int qtvar(_qt_msgid) = 0;                                        \
     qtvar(_qprof_tmp_var).th = hdl;                                         \
-    if ( likely( !!( qt_isInitialized(hdl) ) ) ) {                          \
-        if ( unlikely( !qtvar(_qt_msgid) ) ) {                              \
+    if ( QUICKTRACE_LIKELY( !!( qt_isInitialized(hdl) ) ) ) {               \
+        if ( QUICKTRACE_UNLIKELY( !qtvar(_qt_msgid) ) ) {                   \
             void *_qt_desc = alloca(qt_msgDescSize());                      \
             qt_msgDescInit( hdl, _qt_desc, &qtvar(_qt_msgid),               \
                             __FILE__, __LINE__ );                           \
@@ -271,7 +264,7 @@ static struct ignoreme_ {} ignoreme;
             }                                                               \
         }                                                                   \
         qtvar(_qprof_tmp_var).mid = qtvar(_qt_msgid);                       \
-        qtvar(_qprof_tmp_var).tsc = rdtsc();                             \
+        qtvar(_qprof_tmp_var).tsc = rdtsc();                                \
     }                                                                       \
 
 /*

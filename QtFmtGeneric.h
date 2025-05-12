@@ -68,7 +68,7 @@ fmtMsg( QuickTrace::RingBuf & rb,
 } // namespace QuickTrace
 
 #define QTFMT_H_MSGID_INIT_FMT( _qtf, _msgId, className, funcName, fmtString, ... ) \
-   if ( unlikely( !!( _qtf ) && !( _qtf )->msgIdInitialized( _msgId ) ) ) {         \
+   if ( QUICKTRACE_UNLIKELY( !!( _qtf ) && !( _qtf )->msgIdInitialized( _msgId ) ) ) {         \
       QuickTrace::MsgDesc _qtmd( _qtf, &_msgId, __FILE__, __LINE__ );               \
       QuickTrace::msgIdInit(                                                        \
          _qtmd, className, funcName, fmtString, ##__VA_ARGS__ );                    \
@@ -94,7 +94,7 @@ fmtMsg( QuickTrace::RingBuf & rb,
 #define QTFMT_INTERNAL_H( _qtf, _n, className, fmtString, ... )                     \
    do {                                                                             \
       static QuickTrace::MsgId _msgId;                                              \
-      if ( likely( !!( _qtf ) ) ) {                                                 \
+      if ( QUICKTRACE_LIKELY( !!( _qtf ) ) ) {                                      \
          QTFMT_H_MSGID(                                                             \
             _qtf, _msgId, _n, className, __func__, fmtString, ##__VA_ARGS__ );      \
       }                                                                             \
@@ -196,7 +196,7 @@ fmtMsg( QuickTrace::RingBuf & rb,
    QTFMT_RAW_H( QuickTrace::theTraceFile, 9, fmtString, ##__VA_ARGS__ )
 
 #define QTFMT_ASSERT( _cond, fmtString, ... )                                       \
-   if ( unlikely( !( _cond ) ) ) {                                                  \
+   if ( QUICKTRACE_UNLIKELY( !( _cond ) ) ) {                                       \
       QTFMT0( fmtString, ##__VA_ARGS__ )                                            \
       assert( _cond );                                                              \
    }
@@ -222,7 +222,7 @@ fmtMsg( QuickTrace::RingBuf & rb,
 #define QTFMT_PROF_H_MSGID_VAR(                                                     \
    _qtf, _msgId, _tsc, _n, className, funcName, fmtString, ... )                    \
    uint64_t _tsc;                                                                   \
-   if ( likely( !!( _qtf ) ) ) {                                                    \
+   if ( QUICKTRACE_LIKELY( !!( _qtf ) ) ) {                                         \
       QTFMT_H_MSGID_INIT_FMT(                                                       \
          _qtf, _msgId, className, funcName, fmtString, ##__VA_ARGS__ );             \
       QuickTrace::RingBuf & _rb = ( _qtf )->log( _n );                              \

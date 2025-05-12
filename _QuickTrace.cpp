@@ -121,16 +121,53 @@ trace(PyObject *self, PyObject *args) {
        case 'p':
        default: {
           const char * c;
-          if( PyStr_Check( o )) {
-             c = PyStr_AsString(o);
-             ringBuf << c;
-             result = 2;
+          // If not a string, convert, otherwise, bump reference, so either way,
+          // we just need to decrement refcount on 'o' when done.
+          if( !PyStr_Check( o ) ) {
+             o = PyObject_Str( o );
           } else {
-             PyObject * s = PyObject_Str( o );
-             const char * c = PyStr_AsString( s );
+            Py_INCREF( o );
+          }
+
+          if ( o != NULL ) {
+             c = PyUnicode_AsUTF8( o );
+             PyObject *bytes;
+             if ( c == NULL ) {
+                // Unhappy path - strict UTF-8 decode failed, try the hard way
+                // with "surrogateescape"
+                PyErr_Clear();
+                bytes = PyUnicode_AsEncodedString( o, "utf-8", "surrogateescape" );
+
+                // If we failed to convert to bytes, add some indicator to the trace.
+                if ( bytes == NULL ) {
+                   c = "<invalid UTF-8>";
+                   PyErr_Clear();
+                   result = 6;
+                } else {
+                   c = PyBytes_AsString( bytes );
+                   // This should not happen: it would require
+                   // PyUnicode_AsEncodedString to return something other than
+                   // a bytes object, which it does not.
+                   if ( c == NULL ) {
+                      c = "<invalid UTF-8>";
+                      PyErr_Clear();
+                      result = 7;
+                   } else {
+                      result = 8;
+                   }
+                }
+             } else {
+                // happy case - got cached UTF-8 encoding.
+                result = 2;
+                bytes = NULL;
+             }
              ringBuf << c;
-             Py_DECREF( s );
-             result = 6;
+             if ( o != NULL ) {
+                Py_DECREF( o );
+             }
+             if ( bytes != NULL ) {
+                Py_DECREF( bytes );
+             }
           }
           break;
        }

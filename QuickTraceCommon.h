@@ -37,8 +37,8 @@
 extern uint64_t qt_rdtsc_mocker;
 #endif
 
-#define unlikely( cond ) __builtin_expect((cond),0)
-#define likely( cond ) __builtin_expect((cond),1)
+#define QUICKTRACE_UNLIKELY( cond ) __builtin_expect((cond),0)
+#define QUICKTRACE_LIKELY( cond ) __builtin_expect((cond),1)
 
 // Unsynchronized rdtsc (synchronizing would require a cpuid or other
 // memory barrier, which is slow).  Being unsynchronized means that
