@@ -38,7 +38,7 @@
 #define WC_QTRACE_H( _qtf, _n, _x, _y )                                             \
    do {                                                                             \
       static QuickTrace::MsgId _msgId;                                              \
-      if ( likely( !!( _qtf ) ) ) {                                                 \
+      if ( QUICKTRACE_LIKELY( !!( _qtf ) ) ) {                                      \
          struct timeval _tv = ( _qtf )->wallClockTimestamp();                       \
          WC_QTRACE_H_MSGID(                                                         \
             _qtf,                                                                   \
@@ -68,12 +68,12 @@
 // messages with wall-clock timestamp from the other regular messages without
 // wall-clock timestamp.
 // Note: The other alternative is to modify MsgDesc to identify this condition.
-#define WC_QTRACE_H_MSGID_INIT_FMT( _qtf, _msgId, _x, _y )                          \
-   if ( unlikely( !!( _qtf ) && !( _qtf )->msgIdInitialized( _msgId ) ) ) {         \
-      QuickTrace::MsgDesc _qtmd( _qtf, &_msgId, __FILE__, 0 );                      \
-      _qtmd.formatString() << _y;                                                   \
-      _qtmd << _x;                                                                  \
-      _qtmd.finish();                                                               \
+#define WC_QTRACE_H_MSGID_INIT_FMT( _qtf, _msgId, _x, _y )                                     \
+   if ( QUICKTRACE_UNLIKELY( !!( _qtf ) && !( _qtf )->msgIdInitialized( _msgId ) ) ) {         \
+      QuickTrace::MsgDesc _qtmd( _qtf, &_msgId, __FILE__, 0 );                                 \
+      _qtmd.formatString() << _y;                                                              \
+      _qtmd << _x;                                                                             \
+      _qtmd.finish();                                                                          \
    }
 
 #define WCQT0( _x, _y ) WC_QTRACE_H( QuickTrace::theTraceFile, 0, _x, _y )

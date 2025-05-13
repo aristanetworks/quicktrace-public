@@ -68,6 +68,9 @@ set(
       ${CMAKE_SOURCE_DIR}/QtFmtGeneric.h
       ${CMAKE_SOURCE_DIR}/WallClockQt.h
       ${CMAKE_SOURCE_DIR}/QuickTraceRingBuf.h
+      ${CMAKE_SOURCE_DIR}/QuickTraceFileHeader.h
+      ${CMAKE_SOURCE_DIR}/QuickTraceFormatStringTraits.h
+      ${CMAKE_SOURCE_DIR}/QuickTraceFormatStringUtils.h
 )
 set(
    QUICKTRACE_SOURCES 

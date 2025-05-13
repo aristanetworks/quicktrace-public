@@ -28,7 +28,10 @@
 #define QUICKTRACE_QUICKTRACEOPTFORMATTER_H
 
 #include <optional>
+
 #include <QuickTrace/QuickTraceFormatString.h>
+#include <QuickTrace/QuickTraceFormatStringTraits.h>
+#include <QuickTrace/QuickTraceFormatStringUtils.h>
 
 namespace QuickTrace {
 
@@ -45,7 +48,7 @@ put( RingBuf * log, const std::optional< T > & opt ) noexcept {
 
 template< typename T >
 char const *
-formatString( const std::optional< T > & opt ) {
+formatString( const MsgFormatStringAdlTag *, const std::optional< T > & opt ) {
    static constexpr size_t formatStrMaxLen = 16;
    // Use a statically sized buffer to store our runtime generated formatString
    thread_local char formatStr[ formatStrMaxLen ] = {
@@ -57,8 +60,8 @@ formatString( const std::optional< T > & opt ) {
       // Overloads of formatString shouldn't actually care about the underlying
       // instance, and are only used for overload resolution, so default construct
       // the value to pick the right overload, since our optional type might be
-      // empty
-      char const * typeFormat = formatString( T{} );
+      // empty.
+      char const * typeFormat = formatStringDispatch( T{} );
 
       // Craft a format string along the lines of "OPT<FORMAT>". This will be
       // specially decoded in qttail.

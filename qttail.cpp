@@ -24,6 +24,7 @@
 // ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 // SUCH DAMAGE.
 
+#include <array>
 #include <map>
 #include <cstdarg>
 #include <getopt.h>
@@ -895,7 +896,7 @@ private:
    int options_;
    std::pair< uint64_t, int > next_;
    std::string qtname_; // short file name (without path)
-   RingBuffer rbs_[ QuickTrace::TraceFile::NumTraceLevels ];
+   std::array<RingBuffer, QuickTrace::TraceFile::NumTraceLevels> rbs_;
    off_t size_;
    Status status_;
    const QuickTrace::TraceFileHeader * tfh_;

@@ -41,7 +41,7 @@ QTFILE = '/tmp/qttail_plugin_test.qt'
 tDir = os.getenv( 'target_dir' )
 tDir = tDir + "/QtTailPluginTestDir/"
 subprocess.check_call( "./QtPluginType", env={ 'QTFILE': QTFILE } )
-output = subprocess.check_output( [ "/usr/bin/qttail", '-c', QTFILE ],
+output = subprocess.check_output( [ "qttail", '-c', QTFILE ],
       env={ 'QT_FORMATTER_DIR': tDir },
       universal_newlines=True )
 # split lines for scanning

@@ -37,6 +37,11 @@ traceString( int level, const char * string ) {
    QTRACE_H( QuickTrace::theTraceFile, level, "string: " << QVAR, string );
 }
 
+void
+traceLongString( int level, const char * string ) {
+   QTRACE_H_LONGSTRING( QuickTrace::theTraceFile, level, string );
+}
+
 extern "C" {
 
 // C wrappers for the above so that ctypes can use them
@@ -49,6 +54,11 @@ qtTraceCounter( int level, int counter ) {
 void
 qtTraceString( int level, const char * string ) {
    traceString( level, string );
+}
+
+void
+qtTraceLongString( int level, const char * string ) {
+   traceLongString( level, string );
 }
 
 // Stubs for extern GoQuickTrace functions

@@ -1,4 +1,4 @@
-// Copyright (c) 2018, Arista Networks, Inc.
+// Copyright (c) 2025, Arista Networks, Inc.
 // All rights reserved.
 
 // Redistribution and use in source and binary forms, with or without modification,
@@ -24,51 +24,47 @@
 // ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 // SUCH DAMAGE.
 
-#ifndef QUICKTRACE_MESSAGEPARSER_H
-#define QUICKTRACE_MESSAGEPARSER_H
+#ifndef QUICKTRACE_QUICKTRACEFILEHEADER_H
+#define QUICKTRACE_QUICKTRACEFILEHEADER_H
 
-#include <cstdint>
-#include <string>
+#include <stdint.h>
 
-struct Message {
- public:
-   Message() : tsc_( 0 ), msgId_( 0 ), lineno_( 0 ) {}
-   Message( uint64_t tsc, std::string filename, uint32_t lineno, std::string msg,
-           std::string fmt, uint32_t msgId ) :
-         tsc_( tsc ), msgId_( msgId ), lineno_( lineno ),
-         filename_( std::move( filename ) ), msg_( std::move( msg ) ),
-         fmt_( std::move( fmt ) ) {}
-   uint64_t tsc() { return tsc_; }
-   const std::string & filename() const { return filename_; }
-   uint32_t lineno() { return lineno_; }
-   const std::string & msg() const { return msg_; }
-   const std::string & fmt() const { return fmt_; }
-   uint32_t msgId() { return msgId_; }
- private:
-   uint64_t tsc_;
-   uint32_t msgId_;
-   uint32_t lineno_;
-   std::string filename_;
-   std::string msg_;
-   std::string fmt_;
+namespace QuickTrace {
+
+struct SizeSpec {
+   // Sizes, in kilobytes of the individual trace buffers
+   // So for example, if you construct one  like this:
+   //   SizeSpec s = {1000,100,1, 1,1,1,1,1,1,1000};
+   // you'll allocate a megabyte for 0 and 9, 100K for 1, and 1K for
+   // everything else
+   static constexpr int SIZE = 10;
+   uint32_t sz[ SIZE ];
+
+   bool operator==( const SizeSpec &other ) const{
+      for ( int i = 0; i < SIZE; i++ ){
+         if( sz[i] != other.sz[i] ){
+            return false;
+         }
+      }
+      return true;
+   }
 };
 
-class MessageParser {
-public:
-   MessageParser();
-
-   void initialize( const void * fpp, int fd );
-   bool more() const;
-   Message parse();
-   void recheck();
-
-private:
-   uint32_t index_;
-   uint32_t version_;
-   int fd_;
-   const char * base_;
-   const char * p_;
-   const char * end_;
+struct TraceFileHeader {
+   uint32_t version;
+   uint32_t fileSize;
+   uint32_t fileHeaderSize;
+   uint32_t fileTrailerSize;
+   uint32_t firstMsgOffset;
+   uint32_t logCount;
+   uint64_t tsc0;
+   double monotime0;
+   uint64_t tsc1;
+   double monotime1;
+   double utc1;
+   SizeSpec logSizes;
 };
 
-#endif
+} // namespace QuickTrace
+
+#endif // QUICKTRACE_QUICKTRACEFILEHEADER_H

@@ -1,4 +1,4 @@
-// Copyright (c) 2018, Arista Networks, Inc.
+// Copyright (c) 2025, Arista Networks, Inc.
 // All rights reserved.
 
 // Redistribution and use in source and binary forms, with or without modification,
@@ -24,51 +24,61 @@
 // ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 // SUCH DAMAGE.
 
-#ifndef QUICKTRACE_MESSAGEPARSER_H
-#define QUICKTRACE_MESSAGEPARSER_H
+// This tests legacy way of defining custom formatter for arbitrary types. This
+// requires including QuickTrace/QuickTrace.h **after** the definition, otherwise it
+// is not found.
 
-#include <cstdint>
-#include <string>
+#include <iostream>
+#include <unistd.h>
 
-struct Message {
- public:
-   Message() : tsc_( 0 ), msgId_( 0 ), lineno_( 0 ) {}
-   Message( uint64_t tsc, std::string filename, uint32_t lineno, std::string msg,
-           std::string fmt, uint32_t msgId ) :
-         tsc_( tsc ), msgId_( msgId ), lineno_( lineno ),
-         filename_( std::move( filename ) ), msg_( std::move( msg ) ),
-         fmt_( std::move( fmt ) ) {}
-   uint64_t tsc() { return tsc_; }
-   const std::string & filename() const { return filename_; }
-   uint32_t lineno() { return lineno_; }
-   const std::string & msg() const { return msg_; }
-   const std::string & fmt() const { return fmt_; }
-   uint32_t msgId() { return msgId_; }
- private:
-   uint64_t tsc_;
-   uint32_t msgId_;
-   uint32_t lineno_;
-   std::string filename_;
-   std::string msg_;
-   std::string fmt_;
+#include <QuickTrace/QuickTraceRingBuf.h>
+
+namespace {
+
+struct Bar {
+   Bar( int a ) : a_{ a } {}
+   int a_;
 };
 
-class MessageParser {
-public:
-   MessageParser();
+} // namespace
 
-   void initialize( const void * fpp, int fd );
-   bool more() const;
-   Message parse();
-   void recheck();
+namespace QuickTrace {
 
-private:
-   uint32_t index_;
-   uint32_t version_;
-   int fd_;
-   const char * base_;
-   const char * p_;
-   const char * end_;
-};
+const char *
+formatString( const Bar & ) {
+   return "i";
+}
 
-#endif
+void
+put( RingBuf * rb, const Bar & bar ) {
+   rb->push( bar.a_ );
+}
+
+} // namespace QuickTrace
+
+#include <QuickTrace/QuickTrace.h>
+
+int
+main( int argc, char ** argv ) {
+   char const * outfile = getenv( "QTFILE" ) ?: "qt_formatter_order_test.qt";
+   QuickTrace::initialize( outfile );
+   auto bar = Bar( 42 );
+   QTRACE0( "Bar: " << QVAR, bar );
+
+   // Test for optionals.
+   const std::optional< uint32_t > & opt = 42;
+   QTRACE0( "Opt: " << QVAR, opt );
+
+   // Test for bitfields.
+   enum ExampleEnum { enum1 };
+   struct {
+      int i1 : 3;
+      ExampleEnum l1 : 3;
+   } bitfield = {};
+   QTRACE0( "Bitfield: " << QVAR << " " << QVAR, bitfield.i1 << bitfield.l1 );
+
+   // Test for VLAs.
+   size_t len = 42;
+   char vla[ len ];
+   QTRACE0( "strAddr: " << QVAR, vla );
+}

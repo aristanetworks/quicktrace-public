@@ -132,7 +132,7 @@ qtprof_eob ( void *tmp_var)
 {
    qtprof_t *prof = (qtprof_t *)tmp_var;
    void *hdl = prof->th;
-   if( likely( !!( qt_isInitialized(hdl) ) ) ) {
+   if( QUICKTRACE_LIKELY( !!( qt_isInitialized(hdl) ) ) ) {
       uint64_t now = rdtsc();
       uint64_t delta = now - prof->tsc;
       QuickTrace::TraceHandle *thdl = (QuickTrace::TraceHandle *)hdl;
@@ -148,7 +148,7 @@ qtproff_eob ( void *tmp_var)
 {
    qtprof_t *prof = (qtprof_t *)tmp_var;
    void *hdl = prof->th;
-   if( likely( !!( qt_isInitialized(hdl) ) ) ) {
+   if( QUICKTRACE_LIKELY( !!( qt_isInitialized(hdl) ) ) ) {
       uint64_t now = rdtsc();
       uint64_t delta = now - prof->tsc;
       QuickTrace::TraceHandle *thdl = (QuickTrace::TraceHandle *)hdl;

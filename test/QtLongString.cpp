@@ -1,4 +1,4 @@
-// Copyright (c) 2018, Arista Networks, Inc.
+// Copyright (c) 2025, Arista Networks, Inc.
 // All rights reserved.
 
 // Redistribution and use in source and binary forms, with or without modification,
@@ -24,51 +24,31 @@
 // ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 // SUCH DAMAGE.
 
-#ifndef QUICKTRACE_MESSAGEPARSER_H
-#define QUICKTRACE_MESSAGEPARSER_H
+#include <stdlib.h>
+#include <QuickTrace/QuickTrace.h>
 
-#include <cstdint>
-#include <string>
+char const * outfile = getenv( "QTFILE" ) ?: "QtLongString.out";
 
-struct Message {
- public:
-   Message() : tsc_( 0 ), msgId_( 0 ), lineno_( 0 ) {}
-   Message( uint64_t tsc, std::string filename, uint32_t lineno, std::string msg,
-           std::string fmt, uint32_t msgId ) :
-         tsc_( tsc ), msgId_( msgId ), lineno_( lineno ),
-         filename_( std::move( filename ) ), msg_( std::move( msg ) ),
-         fmt_( std::move( fmt ) ) {}
-   uint64_t tsc() { return tsc_; }
-   const std::string & filename() const { return filename_; }
-   uint32_t lineno() { return lineno_; }
-   const std::string & msg() const { return msg_; }
-   const std::string & fmt() const { return fmt_; }
-   uint32_t msgId() { return msgId_; }
- private:
-   uint64_t tsc_;
-   uint32_t msgId_;
-   uint32_t lineno_;
-   std::string filename_;
-   std::string msg_;
-   std::string fmt_;
-};
+int main( int argc, char const ** argv ) {
 
-class MessageParser {
-public:
-   MessageParser();
+   QuickTrace::initialize( outfile, 0, NULL, 0, 80 );
 
-   void initialize( const void * fpp, int fd );
-   bool more() const;
-   Message parse();
-   void recheck();
+   // Copy some test cases from QtMaxStrLen.cpp
+   QTRACE1( "long string", "This string is longer than 24 characters and less "
+            "than 80." );
+   QTRACE1( "too long", "Clocking in at over 80 characters, this line is way "
+            "way too long, so even with our new quick trace, this should "
+            "fail" );
 
-private:
-   uint32_t index_;
-   uint32_t version_;
-   int fd_;
-   const char * base_;
-   const char * p_;
-   const char * end_;
-};
+   // Now we test the explicitly long string
+   QTRACE_H_LONGSTRING( QuickTrace::theTraceFile, 2, "Lorem ipsum dolor sit amet, "
+    "consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et "
+    "dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation "
+    "ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure "
+    "dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla "
+    "pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui "
+    "officia deserunt mollit anim id est laborum" );
 
-#endif
+   QTRACE_H_LONGSTRING( QuickTrace::theTraceFile, 2, "This is an extended string, "
+         "but not so long that the longstring code feels that it has to truncate it." );
+}

@@ -113,6 +113,7 @@ class TestCppAndPythonAndGoSources( TestQtctl ):
    def initialTraces( self ):
       qtTestLib.qtTraceString( 1, b"c++" )
       qtTestLib.qtTraceCounter( 1, 1 )
+      qtTestLib.qtTraceLongString( 1, b"c++long" )
       self.traceString( "python" )
       self.traceCounter( 2 )
 
@@ -125,10 +126,12 @@ class TestCppAndPythonAndGoSources( TestQtctl ):
 
    def disableSomeMessages( self ):
       subprocess.check_output( [ "qtctl", "off", "-r", "counter", qtpath ] )
+      subprocess.check_output( [ "qtctl", "off", "-r", "^%s$", qtpath ] )
 
    def additionalTraces( self ):
       qtTestLib.qtTraceCounter( 1, 11 )
       qtTestLib.qtTraceString( 1, b"c++ again" )
+      qtTestLib.qtTraceLongString( 1, b"c++long again" )
       qtTestLib.qtTraceCounter( 1, 12 )
       self.traceCounter( 21 )
       self.traceString( "python again" )
@@ -139,18 +142,21 @@ class TestCppAndPythonAndGoSources( TestQtctl ):
 
    def reenableMessages( self ):
       subprocess.check_output( [ "qtctl", "on", "-r", "counter", qtpath ] )
+      subprocess.check_output( [ "qtctl", "on", "-r", "^%s$", qtpath ] )
 
    def finalTraces( self ):
       qtTestLib.qtTraceCounter( 1, 13 )
+      qtTestLib.qtTraceLongString( 1, b"c++long finally" )
       self.traceCounter( 23 )
       qtTestLib.qtGoTraceCounter( 3, self.goCounterMsgId, 33 )
 
    def testQtctl( self ):
-      self.executeTest( 'string: c++', 'counter: 1',
+      self.executeTest( 'string: c++', 'counter: 1', 'c++long',
                         'string: python', 'counter: 2',
                         'string: Go', 'counter: 3',
                         'string: c++ again', 'string: python again',
                         'string: Go again', 'counter: 13',
+                        'c++long finally',
                         'counter: 23', 'counter: 33' )
 
 

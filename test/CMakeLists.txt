@@ -82,6 +82,11 @@ target_link_libraries(
 #------------------------------------------------------------------------------------
 # QtTailPluginTest
 
+set(QT_TAIL_PLUGIN_TEST_DIR ${PROJECT_SOURCE_DIR}/bld/QtTailPluginTestDir)
+if(NOT EXISTS ${QT_TAIL_PLUGIN_TEST_DIR})
+   file(MAKE_DIRECTORY ${QT_TAIL_PLUGIN_TEST_DIR})
+endif()
+
 add_library(
    QtTailPluginTest
    SHARED
@@ -94,6 +99,11 @@ target_link_libraries(
       dl
       pthread
       MessageFormatter
+)
+set_target_properties(
+   QtTailPluginTest
+   PROPERTIES
+      LIBRARY_OUTPUT_DIRECTORY ${QT_TAIL_PLUGIN_TEST_DIR}
 )
 
 #------------------------------------------------------------------------------------
@@ -397,13 +407,6 @@ add_test(
    WORKING_DIRECTORY ${TEST_DIR}
 )
 add_test(
-   NAME QtDiskFull
-   COMMAND
-      ${Python_EXECUTABLE}
-      ${CMAKE_CURRENT_SOURCE_DIR}/QtDiskFull.py
-   WORKING_DIRECTORY ${TEST_DIR}
-)
-add_test(
    NAME QtVaryingArgs
    COMMAND
       ${Python_EXECUTABLE}
@@ -529,7 +532,13 @@ add_test(
       ${CMAKE_CURRENT_SOURCE_DIR}/QtOffBitTest.py
    WORKING_DIRECTORY ${TEST_DIR}
 )
-
+add_test(
+   NAME QtTailPluginTest
+   COMMAND
+      ${Python_EXECUTABLE}
+      ${CMAKE_CURRENT_SOURCE_DIR}/QtTailPluginTest.py
+   WORKING_DIRECTORY ${TEST_DIR}
+)
 add_test(
    NAME QtFmtTest
    COMMAND

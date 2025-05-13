@@ -48,11 +48,15 @@ class TestQTFMTTest( unittest.TestCase ):
       for lvl in range( 0, 10 ):
          msg = prefix + "QtFmtTest lvl" + str( lvl ) + " %s %x"
          qttailExpected.append( ( lvl, msg % ( 42, 0xcafe ) ) )
+      msg = prefix + "QtFmtTest lvl" + str( lvl ) + " %s 0x%x"
+      qttailExpected.append( ( lvl, msg % ( 42, 0xcafe ) ) )
 
       qttailExpected.append( ( 0, prefix + "QtFmtTest noparamsprof extra" ) )
       for lvl in range( 0, 10 ):
          msg = prefix + "QtFmtTest prof" + str( lvl ) + " %s %x"
          qttailExpected.append( ( lvl, msg % ( 42, 0xcafe ) ) )
+      msg = prefix + "QtFmtTest prof" + str( lvl ) + " %s 0x%x"
+      qttailExpected.append( ( lvl, msg % ( 42, 0xcafe ) ) )
 
    def runTestHelper( self ):
       qtFile = subprocess.check_output( self.execFile )
