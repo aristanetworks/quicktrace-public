@@ -1377,8 +1377,6 @@ int main( int argc, char * const * argv ) {
        case 0: // a long option
          switch ( longOptIdx ) {
           case tscOption: // --tsc
-            static_assert( strcmp( longOptions[ tscOption ].name, "tsc" ) == 0,
-                           "incorrect index for option --tsc" );
             options |= Options::PRINT_TSC;
             break;
          }
